@@ -7,6 +7,7 @@ Math.random = () => 0; // make outcomes deterministic
 
 const player = new Player({
   name: 'Tester',
+  class: 'mage',
   maxHealth: 50,
   health: 50,
   attack: 10,
@@ -34,14 +35,19 @@ assert.strictEqual(dmg, 8, 'attackTarget should deal expected damage');
 assert.strictEqual(enemy.health, 22, 'enemy health should decrease');
 
 player.health = 40;
-const healed = player.heal();
-assert.strictEqual(healed, 10, 'heal should be deterministic');
-assert.strictEqual(player.health, 50, 'heal should not exceed maxHealth');
+player.resource = 50;
+let skill = player.heal();
+assert.strictEqual(skill, 'manaShield', 'heal becomes mana shield');
+assert.strictEqual(player.resource, 30, 'resource used to activate shield');
+let damageTaken = player.takeDamage(10);
+assert.strictEqual(damageTaken, 0, 'damage absorbed by mana');
+assert.strictEqual(player.health, 40, 'health unchanged by shield');
+assert.strictEqual(player.resource, 25, 'resource reduced by absorbed damage');
 
 player.defend();
-const taken = player.takeDamage(10);
-assert.strictEqual(taken, 5, 'damage should be halved when defending');
-assert.strictEqual(player.health, 45, 'player health after defending');
+damageTaken = player.takeDamage(10);
+assert.strictEqual(damageTaken, 5, 'damage should be halved when defending');
+assert.strictEqual(player.health, 35, 'player health after defending');
 
 player.resource = 30;
 dmg = player.special(enemy);

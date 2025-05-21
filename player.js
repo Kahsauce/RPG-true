@@ -2,6 +2,9 @@ class Player {
     constructor(data) {
         Object.assign(this, data);
         this.isDefending = false;
+        this.shieldActive = false;
+        this.dodgeNext = false;
+        this.manaShieldActive = false;
     }
 
     attackTarget(target) {
@@ -17,9 +20,20 @@ class Player {
     }
 
     heal() {
-        const healAmount = 10 + Math.floor(Math.random() * 5);
-        this.health = Math.min(this.maxHealth, this.health + healAmount);
-        return healAmount;
+        const cost = 20;
+        if (this.resource < cost) return null;
+        this.resource -= cost;
+        if (this.class === 'guerrier') {
+            this.shieldActive = true;
+            return 'shield';
+        } else if (this.class === 'voleur') {
+            this.dodgeNext = true;
+            return 'dodge';
+        } else {
+            // mage
+            this.manaShieldActive = true;
+            return 'manaShield';
+        }
     }
 
     defend() {
@@ -37,6 +51,20 @@ class Player {
     }
 
     takeDamage(dmg) {
+        if (this.dodgeNext) {
+            this.dodgeNext = false;
+            return 0;
+        }
+        if (this.shieldActive) {
+            dmg = Math.floor(dmg / 2);
+            this.shieldActive = false;
+        }
+        if (this.manaShieldActive) {
+            const absorbed = Math.min(this.resource, dmg);
+            this.resource -= absorbed;
+            dmg -= absorbed;
+            this.manaShieldActive = false;
+        }
         if (this.isDefending) {
             dmg = Math.floor(dmg / 2);
             this.isDefending = false;
