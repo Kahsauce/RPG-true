@@ -56,6 +56,8 @@ function loadGame() {
     const obj = JSON.parse(data);
     if (obj.player) obj.player = new Player(obj.player);
     if (obj.enemy) obj.enemy = new Enemy(obj.enemy);
+    // Always start a new session on the player's turn to avoid being stuck
+    obj.isPlayerTurn = true;
     return obj;
 }
 
