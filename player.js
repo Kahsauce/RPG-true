@@ -4,8 +4,11 @@ class Player {
         this.isDefending = false;
     }
 
-    attack(target) {
-        const damage = Math.max(1, this.attack - target.defense + Math.floor(Math.random() * 3));
+    attackTarget(target) {
+        const damage = Math.max(
+            1,
+            this.attack - target.defense + Math.floor(Math.random() * 3)
+        );
         target.takeDamage(damage);
         if (this.resourceType === 'rage') {
             this.resource = Math.min(this.maxResource, this.resource + 10);

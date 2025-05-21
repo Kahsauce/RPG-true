@@ -336,7 +336,7 @@ function useItem(item) {
 function playerAttack() {
     if (!gameState.isPlayerTurn) return;
 
-    const damage = gameState.player.attack(gameState.enemy);
+    const damage = gameState.player.attackTarget(gameState.enemy);
 
     // Animation
     enemyCharacter.classList.add('damage-animation');
