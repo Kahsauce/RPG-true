@@ -52,7 +52,13 @@ function saveGame() {
 
 function loadGame() {
     const data = localStorage.getItem('luminaSave');
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        console.warn('Sauvegarde corromp\u00e9e : r\u00e9initialisation n\u00e9cessaire.', e);
+        return null;
+    }
 }
 
 /* --------- État du jeu --------- */
