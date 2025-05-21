@@ -1,0 +1,9 @@
+{
+  "name": "rpg-true",
+  "version": "1.0.0",
+  "description": "Minimalist RPG prototype",
+  "scripts": {
+    "test": "node tests/loadGame.test.js"
+  },
+  "license": "MIT"
+}
