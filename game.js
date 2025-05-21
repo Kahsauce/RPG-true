@@ -2,18 +2,21 @@
 const classes = {
     guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100 },
     mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100 },
-    voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100 }
+    voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100 },
+    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-bow-arrow', resource: 'energie', maxResource: 100 }
 };
 
 const advancedClasses = {
     guerrier: { chevalier: { name: 'Chevalier', attack: 2, defense: 2 } },
     mage: { archimage: { name: 'Archimage', attack: 3, defense: 0 } },
-    voleur: { assassin: { name: 'Assassin', attack: 3, defense: 1 } }
+    voleur: { assassin: { name: 'Assassin', attack: 3, defense: 1 } },
+    rodeur: { ranger: { name: 'Ranger', attack: 2, defense: 1 } }
 };
 
 const jobs = {
     forgeron: { name: 'Forgeron', bonus: { attack: 2 } },
-    herboriste: { name: 'Herboriste', bonus: { maxHealth: 5 } }
+    herboriste: { name: 'Herboriste', bonus: { maxHealth: 5 } },
+    alchimiste: { name: 'Alchimiste', bonus: { attack: 1, maxHealth: 5 } }
 };
 
 const talents = {
@@ -25,7 +28,9 @@ const enemiesList = [
     { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure" },
     { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing" },
     { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral" },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse" }
+    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse" },
+    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé" },
+    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide" }
 ];
 
 const scenarios = [
@@ -41,6 +46,26 @@ const scenarios = [
         choices: [
             { text: 'Visiter le marché', action: 'market', next: 2 },
             { text: 'Continuer la route', action: 'road', next: 2 }
+        ]
+    },
+    {
+        text: "Un vieil alchimiste vous aborde. L'écoutez-vous ?",
+        choices: [
+            { text: 'Apprendre l\'alchimie', action: 'alchimiste', next: 3 },
+            { text: 'Ignorer et partir', action: 'road', next: 3 }
+        ]
+    },
+    {
+        text: 'Plus loin, un ancien temple se dresse devant vous.',
+        choices: [
+            { text: 'Explorer le temple', action: 'temple', next: 4 },
+            { text: 'Le contourner', action: 'road', next: 4 }
+        ]
+    },
+    {
+        text: 'Fin du chapitre. Votre quête continue...',
+        choices: [
+            { text: 'Continuer', action: 'road', next: null }
         ]
     }
 ];
@@ -75,7 +100,7 @@ if (!gameState) {
             defense: 2,
             nextAttack: 'Morsure'
         }),
-        inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5, resPotion: 2 },
+        inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5, resPotion: 2, megaPotion: 1, bomb: 1 },
         battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
         isPlayerTurn: true,
         scenarioStep: 0
@@ -88,7 +113,9 @@ if (!gameState) {
             firePotion: 2,
             shield: 1,
             herb: 5,
-            resPotion: 2
+            resPotion: 2,
+            megaPotion: 1,
+            bomb: 1
         };
     }
 }
@@ -122,6 +149,22 @@ const scenarioModal = document.getElementById('scenario-modal');
 const scenarioText = document.getElementById('scenario-text');
 const scenarioButtons = document.getElementById('scenario-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
+
+function playSound(type) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = type === 'heal' ? 600 : type === 'player' ? 400 : 200;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {}
+}
 
 // Update health bars
 function updateHealthBars() {
@@ -170,6 +213,7 @@ function addBattleMessage(message, type = 'system') {
 
     battleLog.appendChild(messageElement);
     battleLog.scrollTop = battleLog.scrollHeight;
+    playSound(type);
     console.log(`[${speaker}] ${message}`);
 }
 
@@ -284,8 +328,13 @@ function showScenario(step) {
 }
 
 function handleScenarioAction(action) {
-    if (action === 'forgeron' || action === 'herboriste') {
+    if (action === 'forgeron' || action === 'herboriste' || action === 'alchimiste') {
         selectJob(action);
+        spawnNewEnemy();
+    } else if (action === 'temple') {
+        if (!gameState.inventory.megaPotion) gameState.inventory.megaPotion = 0;
+        gameState.inventory.megaPotion++;
+        addBattleMessage('Vous trouvez une méga potion dans le temple.', 'system');
         spawnNewEnemy();
     } else {
         addBattleMessage('Vous décidez de ' + action + '.', 'system');
@@ -300,7 +349,9 @@ function renderInventory() {
         firePotion: { name: 'Potion de feu', icon: 'fa-fire' },
         shield: { name: 'Bouclier', icon: 'fa-shield-alt' },
         herb: { name: 'Herbe curative', icon: 'fa-leaf' },
-        resPotion: { name: 'Potion de ressource', icon: 'fa-bolt' }
+        resPotion: { name: 'Potion de ressource', icon: 'fa-bolt' },
+        megaPotion: { name: 'Méga potion', icon: 'fa-flask-vial' },
+        bomb: { name: 'Bombe', icon: 'fa-bomb' }
     };
     if (!gameState.inventory) {
         gameState.inventory = {};
@@ -337,6 +388,14 @@ function useItem(item) {
         const restore = 30;
         gameState.player.resource = Math.min(gameState.player.maxResource, gameState.player.resource + restore);
         addBattleMessage(`Récupère ${restore} ${gameState.player.resourceType}.`, 'system');
+    } else if (item === 'megaPotion') {
+        const heal = 50;
+        gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+        addBattleMessage(`La méga potion rend ${heal} PV!`, 'heal');
+    } else if (item === 'bomb') {
+        const dmg = 35;
+        gameState.enemy.health -= dmg;
+        addBattleMessage(`La bombe explose et inflige ${dmg} dégâts!`, 'player');
     }
     gameState.inventory[item]--;
     renderInventory();
@@ -450,10 +509,21 @@ function enemyTurn() {
     if (gameState.player.health <= 0) {
         gameState.player.health = 0;
         addBattleMessage(`${gameState.player.name} a été vaincu!`, 'system');
+        gameOver();
     }
 
     updateHealthBars();
     gameState.isPlayerTurn = true;
+}
+
+function gameOver() {
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+    playerCharacter.classList.add('death-animation');
+    addBattleMessage('Fin de la partie. Rechargez la page pour recommencer.', 'system');
+    saveGame();
 }
 
 // Enemy defeated
