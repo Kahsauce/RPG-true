@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - RPG Minimaliste</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .character-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .damage-animation {
+            animation: shake 0.3s linear, pulse 0.3s linear;
+        }
+        .heal-animation {
+            animation: pulse 1s linear;
+        }
+        .bg-custom {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        .frosted-glass {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .health-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-custom text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+    <div class="max-w-4xl w-full">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">LUMINA</h1>
+            <p class="text-xl text-blue-200">Un voyage à travers les ombres</p>
+        </header>
+
+        <!-- Game Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Player Section -->
+            <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-blue-300">Aelar</h2>
+                    <div class="flex space-x-2">
+                        <span class="px-3 py-1 bg-blue-900/50 rounded-full text-sm">Niv. 5</span>
+                        <span class="px-3 py-1 bg-green-900/50 rounded-full text-sm flex items-center">
+                            <i class="fas fa-heart text-red-400 mr-1"></i> 42/50
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="relative h-64 mb-4 flex items-center justify-center">
+                    <div id="player-character" class="character-float">
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg shadow-blue-500/30 flex items-center justify-center">
+                            <i class="fas fa-hat-wizard text-5xl text-white"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gray-800/50 rounded-full h-2">
+                        <div id="player-health" class="health-bar bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full" style="width: 84%"></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="playerAttack()" class="action-btn bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700">
+                        <i class="fas fa-bolt mr-2"></i> Attaquer
+                    </button>
+                    <button onclick="playerHeal()" class="action-btn bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
+                        <i class="fas fa-heart mr-2"></i> Soin
+                    </button>
+                    <button onclick="playerDefend()" class="action-btn bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700">
+                        <i class="fas fa-shield-alt mr-2"></i> Défense
+                    </button>
+                    <button onclick="playerSpecial()" class="action-btn bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700">
+                        <i class="fas fa-star mr-2"></i> Spécial
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Battle Log -->
+            <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50 lg:col-span-1">
+                <h2 class="text-2xl font-bold text-blue-300 mb-4">Journal de Combat</h2>
+                <div id="battle-log" class="h-96 overflow-y-auto space-y-3 pr-2">
+                    <div class="text-sm p-3 bg-blue-900/30 rounded-lg">
+                        <span class="text-blue-300">[Système]</span> Bienvenue dans Lumina. Préparez-vous au combat!
+                    </div>
+                    <div class="text-sm p-3 bg-blue-900/30 rounded-lg">
+                        <span class="text-yellow-300">[Aelar]</span> Un loup des ombres apparaît!
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex items-center">
+                    <div class="flex-1 bg-gray-700/50 rounded-full h-2">
+                        <div id="xp-bar" class="health-bar bg-gradient-to-r from-yellow-400 to-amber-500 h-full rounded-full" style="width: 45%"></div>
+                    </div>
+                    <span class="ml-2 text-sm text-yellow-300">45% XP</span>
+                </div>
+            </div>
+            
+            <!-- Enemy Section -->
+            <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-red-300">Loup des Ombres</h2>
+                    <div class="flex space-x-2">
+                        <span class="px-3 py-1 bg-red-900/50 rounded-full text-sm">Niv. 4</span>
+                        <span class="px-3 py-1 bg-green-900/50 rounded-full text-sm flex items-center">
+                            <i class="fas fa-heart text-red-400 mr-1"></i> 28/35
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="relative h-64 mb-4 flex items-center justify-center">
+                    <div id="enemy-character">
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 shadow-lg shadow-red-500/20 flex items-center justify-center">
+                            <i class="fas fa-paw text-5xl text-red-400"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gray-800/50 rounded-full h-2">
+                        <div id="enemy-health" class="health-bar bg-gradient-to-r from-red-500 to-pink-600 h-full rounded-full" style="width: 80%"></div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="inline-block px-4 py-2 bg-red-900/30 rounded-full text-sm mb-2">
+                        <i class="fas fa-bolt text-yellow-400 mr-1"></i> Prochaine attaque: Morsure
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="p-2 bg-gray-800/50 rounded">
+                            <div class="text-red-300">Attaque</div>
+                            <div>8-12</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded">
+                            <div class="text-yellow-300">Défense</div>
+                            <div>3</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded">
+                            <div class="text-green-300">Vitesse</div>
+                            <div>7</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory -->
+        <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50 mt-6">
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Inventaire</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3">
+                        <i class="fas fa-flask text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Potion de soin</div>
+                        <div class="text-xs text-blue-200">x3</div>
+                    </div>
+                </div>
+                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center mr-3">
+                        <i class="fas fa-fire text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Potion de feu</div>
+                        <div class="text-xs text-blue-200">x2</div>
+                    </div>
+                </div>
+                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center mr-3">
+                        <i class="fas fa-shield-alt text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Bouclier</div>
+                        <div class="text-xs text-blue-200">Équipé</div>
+                    </div>
+                </div>
+                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center mr-3">
+                        <i class="fas fa-leaf text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Herbe curative</div>
+                        <div class="text-xs text-blue-200">x5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            player: {
+                name: "Aelar",
+                level: 5,
+                health: 50,
+                maxHealth: 50,
+                attack: 12,
+                defense: 5,
+                xp: 45,
+                nextLevelXp: 100
+            },
+            enemy: {
+                name: "Loup des Ombres",
+                level: 4,
+                health: 28,
+                maxHealth: 35,
+                attack: [8, 12],
+                defense: 3,
+                nextAttack: "Morsure"
+            },
+            battleLog: [
+                "[Système] Bienvenue dans Lumina. Préparez-vous au combat!",
+                "[Aelar] Un loup des ombres apparaît!"
+            ],
+            isPlayerTurn: true
+        };
+
+        // DOM Elements
+        const playerHealthBar = document.getElementById('player-health');
+        const enemyHealthBar = document.getElementById('enemy-health');
+        const xpBar = document.getElementById('xp-bar');
+        const battleLog = document.getElementById('battle-log');
+        const playerCharacter = document.getElementById('player-character');
+        const enemyCharacter = document.getElementById('enemy-character');
+
+        // Update health bars
+        function updateHealthBars() {
+            playerHealthBar.style.width = `${(gameState.player.health / gameState.player.maxHealth) * 100}%`;
+            enemyHealthBar.style.width = `${(gameState.enemy.health / gameState.enemy.maxHealth) * 100}%`;
+            xpBar.style.width = `${gameState.player.xp}%`;
+        }
+
+        // Add message to battle log
+        function addBattleMessage(message, type = 'system') {
+            const colors = {
+                system: 'blue-300',
+                player: 'yellow-300',
+                enemy: 'red-300',
+                damage: 'red-400',
+                heal: 'green-400'
+            };
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `text-sm p-3 bg-blue-900/30 rounded-lg`;
+            messageElement.innerHTML = `<span class="text-${colors[type]}">[${type === 'player' ? gameState.player.name : type === 'enemy' ? gameState.enemy.name : 'Système'}]</span> ${message}`;
+            
+            battleLog.appendChild(messageElement);
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        // Player actions
+        function playerAttack() {
+            if (!gameState.isPlayerTurn) return;
+            
+            const damage = Math.max(1, gameState.player.attack - gameState.enemy.defense + Math.floor(Math.random() * 3));
+            gameState.enemy.health -= damage;
+            
+            // Animation
+            enemyCharacter.classList.add('damage-animation');
+            setTimeout(() => {
+                enemyCharacter.classList.remove('damage-animation');
+            }, 300);
+            
+            addBattleMessage(`Inflige ${damage} points de dégâts avec une attaque!`, 'player');
+            
+            if (gameState.enemy.health <= 0) {
+                gameState.enemy.health = 0;
+                addBattleMessage(`${gameState.enemy.name} a été vaincu!`, 'system');
+                setTimeout(enemyDefeated, 1000);
+            }
+            
+            updateHealthBars();
+            gameState.isPlayerTurn = false;
+            setTimeout(enemyTurn, 1500);
+        }
+
+        function playerHeal() {
+            if (!gameState.isPlayerTurn) return;
+            
+            const healAmount = 10 + Math.floor(Math.random() * 5);
+            gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + healAmount);
+            
+            // Animation
+            playerCharacter.classList.add('heal-animation');
+            setTimeout(() => {
+                playerCharacter.classList.remove('heal-animation');
+            }, 1000);
+            
+            addBattleMessage(`Récupère ${healAmount} points de vie.`, 'heal');
+            updateHealthBars();
+            gameState.isPlayerTurn = false;
+            setTimeout(enemyTurn, 1500);
+        }
+
+        function playerDefend() {
+            if (!gameState.isPlayerTurn) return;
+            
+            addBattleMessage(`Se met en position défensive. La prochaine attaque sera réduite.`, 'player');
+            gameState.isPlayerTurn = false;
+            setTimeout(enemyTurn, 1500);
+        }
+
+        function playerSpecial() {
+            if (!gameState.isPlayerTurn) return;
+            
+            const damage = 15 + Math.floor(Math.random() * 5);
+            gameState.enemy.health -= damage;
+            
+            // Animation
+            enemyCharacter.classList.add('damage-animation');
+            playerCharacter.style.animation = 'none';
+            setTimeout(() => {
+                playerCharacter.style.animation = 'float 3s ease-in-out infinite';
+            }, 10);
+            
+            addBattleMessage(`Lance un sort puissant pour ${damage} points de dégâts!`, 'player');
+            
+            if (gameState.enemy.health <= 0) {
+                gameState.enemy.health = 0;
+                addBattleMessage(`${gameState.enemy.name} a été vaincu!`, 'system');
+                setTimeout(enemyDefeated, 1000);
+            }
+            
+            updateHealthBars();
+            gameState.isPlayerTurn = false;
+            setTimeout(enemyTurn, 1500);
+        }
+
+        // Enemy turn
+        function enemyTurn() {
+            if (gameState.enemy.health <= 0) return;
+            
+            const damage = Math.max(1, 
+                gameState.enemy.attack[0] + Math.floor(Math.random() * (gameState.enemy.attack[1] - gameState.enemy.attack[0] + 1)) - 
+                gameState.player.defense
+            );
+            
+            gameState.player.health -= damage;
+            
+            // Animation
+            playerCharacter.classList.add('damage-animation');
+            setTimeout(() => {
+                playerCharacter.classList.remove('damage-animation');
+            }, 300);
+            
+            addBattleMessage(`${gameState.enemy.name} utilise ${gameState.enemy.nextAttack} et inflige ${damage} points de dégâts!`, 'enemy');
+            
+            if (gameState.player.health <= 0) {
+                gameState.player.health = 0;
+                addBattleMessage(`${gameState.player.name} a été vaincu!`, 'system');
+            }
+            
+            updateHealthBars();
+            gameState.isPlayerTurn = true;
+        }
+
+        // Enemy defeated
+        function enemyDefeated() {
+            const xpGained = 15 + Math.floor(Math.random() * 10);
+            gameState.player.xp = Math.min(100, gameState.player.xp + xpGained);
+            
+            addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
+            
+            if (gameState.player.xp >= 100) {
+                gameState.player.level++;
+                gameState.player.maxHealth += 10;
+                gameState.player.health = gameState.player.maxHealth;
+                gameState.player.attack += 2;
+                gameState.player.defense += 1;
+                gameState.player.xp = 0;
+                gameState.player.nextLevelXp = Math.floor(gameState.player.nextLevelXp * 1.2);
+                
+                addBattleMessage(`Niveau augmenté à ${gameState.player.level}! Statistiques améliorées.`, 'system');
+            }
+            
+            updateHealthBars();
+            
+            // Spawn new enemy after delay
+            setTimeout(spawnNewEnemy, 2000);
+        }
+
+        // Spawn new enemy
+        function spawnNewEnemy() {
+            const enemies = [
+                { name: "Loup des Ombres", level: 4, health: 35, attack: [8, 12], defense: 3, nextAttack: "Morsure" },
+                { name: "Golem de Pierre", level: 5, health: 50, attack: [10, 15], defense: 5, nextAttack: "Coup de poing" },
+                { name: "Esprit Perdu", level: 3, health: 25, attack: [5, 10], defense: 2, nextAttack: "Toucher spectral" }
+            ];
+            
+            gameState.enemy = {...enemies[Math.floor(Math.random() * enemies.length)]};
+            gameState.isPlayerTurn = true;
+            
+            addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
+            updateHealthBars();
+        }
+
+        // Initialize game
+        updateHealthBars();
+    </script>
+</body>
+</html>
