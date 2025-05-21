@@ -158,44 +158,7 @@
         <!-- Inventory -->
         <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50 mt-6">
             <h2 class="text-2xl font-bold text-blue-300 mb-4">Inventaire</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3">
-                        <i class="fas fa-flask text-white"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Potion de soin</div>
-                        <div class="text-xs text-blue-200">x3</div>
-                    </div>
-                </div>
-                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center mr-3">
-                        <i class="fas fa-fire text-white"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Potion de feu</div>
-                        <div class="text-xs text-blue-200">x2</div>
-                    </div>
-                </div>
-                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center mr-3">
-                        <i class="fas fa-shield-alt text-white"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Bouclier</div>
-                        <div class="text-xs text-blue-200">Équipé</div>
-                    </div>
-                </div>
-                <div class="bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center mr-3">
-                        <i class="fas fa-leaf text-white"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Herbe curative</div>
-                        <div class="text-xs text-blue-200">x5</div>
-                    </div>
-                </div>
-            </div>
+            <div id="inventory-items" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
         </div>
     </div>
 
@@ -269,6 +232,30 @@
             protection: { name: 'Protection renforcée', bonus: { defense: 2 } }
         };
 
+        const enemiesList = [
+            { name: "Loup des Ombres", level: 4, health: 35, attack: [8,12], defense: 3, nextAttack: "Morsure" },
+            { name: "Golem de Pierre", level: 5, health: 50, attack: [10,15], defense: 5, nextAttack: "Coup de poing" },
+            { name: "Esprit Perdu", level: 3, health: 25, attack: [5,10], defense: 2, nextAttack: "Toucher spectral" },
+            { name: "Ombre Silencieuse", level: 6, health: 40, attack: [9,14], defense: 4, nextAttack: "Lame ténébreuse" }
+        ];
+
+        const scenarios = [
+            {
+                text: 'Après ce combat, vous trouvez un village. Où allez-vous ?',
+                choices: [
+                    { text: 'Aller à la forge', action: 'forgeron', next: 1 },
+                    { text: 'Chercher des herbes', action: 'herboriste', next: 1 }
+                ]
+            },
+            {
+                text: 'Le village est animé. Voulez-vous visiter le marché ou partir ?',
+                choices: [
+                    { text: 'Visiter le marché', action: 'market', next: 2 },
+                    { text: 'Continuer la route', action: 'road', next: 2 }
+                ]
+            }
+        ];
+
         /* --------- Chargement/Sauvegarde --------- */
         function saveGame() {
             localStorage.setItem('luminaSave', JSON.stringify(gameState));
@@ -293,9 +280,11 @@
                     defense: 2,
                     nextAttack: 'Morsure'
                 },
+                inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5 },
                 battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
                 isPlayerTurn: true,
-                scenarioStep: 0
+                scenarioStep: 0,
+                defending: false
             };
         }
 
@@ -321,6 +310,7 @@
         const scenarioModal = document.getElementById('scenario-modal');
         const scenarioText = document.getElementById('scenario-text');
         const scenarioButtons = document.getElementById('scenario-buttons');
+        const inventoryContainer = document.getElementById('inventory-items');
 
         // Update health bars
         function updateHealthBars() {
@@ -365,6 +355,7 @@
                 classModal.classList.remove('hidden');
             } else {
                 updateHealthBars();
+                renderInventory();
             }
         }
 
@@ -387,6 +378,7 @@
             classModal.classList.add('hidden');
             addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
             updateHealthBars();
+            renderInventory();
             saveGame();
         }
 
@@ -439,17 +431,77 @@
             saveGame();
         }
 
-        function showScenario(text, choices) {
-            scenarioText.textContent = text;
+        function showScenario(step) {
+            const sc = scenarios[step];
+            if (!sc) return;
+            scenarioText.textContent = sc.text;
             scenarioButtons.innerHTML = '';
-            choices.forEach(c => {
+            sc.choices.forEach(c => {
                 const btn = document.createElement('button');
                 btn.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
                 btn.textContent = c.text;
-                btn.onclick = () => { scenarioModal.classList.add('hidden'); c.action(); };
+                btn.onclick = () => {
+                    scenarioModal.classList.add('hidden');
+                    handleScenarioAction(c.action);
+                    gameState.scenarioStep = c.next;
+                    saveGame();
+                };
                 scenarioButtons.appendChild(btn);
             });
             scenarioModal.classList.remove('hidden');
+        }
+
+        function handleScenarioAction(action) {
+            if (action === 'forgeron' || action === 'herboriste') {
+                selectJob(action);
+                spawnNewEnemy();
+            } else {
+                addBattleMessage('Vous décidez de ' + action + '.', 'system');
+                spawnNewEnemy();
+            }
+        }
+
+        function renderInventory() {
+            inventoryContainer.innerHTML = '';
+            const items = {
+                potion: { name: 'Potion de soin', icon: 'fa-flask' },
+                firePotion: { name: 'Potion de feu', icon: 'fa-fire' },
+                shield: { name: 'Bouclier', icon: 'fa-shield-alt' },
+                herb: { name: 'Herbe curative', icon: 'fa-leaf' }
+            };
+            Object.keys(gameState.inventory).forEach(key => {
+                const count = gameState.inventory[key];
+                if (count <= 0) return;
+                const div = document.createElement('div');
+                div.className = 'bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer';
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">x${count}</div></div>`;
+                div.onclick = () => useItem(key);
+                inventoryContainer.appendChild(div);
+            });
+        }
+
+        function useItem(item) {
+            if (!gameState.inventory[item]) return;
+            if (item === 'potion') {
+                const heal = 20;
+                gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+                addBattleMessage(`Utilise une potion et récupère ${heal} PV.`, 'heal');
+            } else if (item === 'firePotion') {
+                const dmg = 20;
+                gameState.enemy.health -= dmg;
+                addBattleMessage(`Lance une potion de feu et inflige ${dmg} dégâts!`, 'player');
+            } else if (item === 'shield') {
+                gameState.player.defense += 2;
+                addBattleMessage('Vous équipez un bouclier, défense +2.', 'system');
+            } else if (item === 'herb') {
+                const heal = 5;
+                gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+                addBattleMessage(`Utilise une herbe curative pour ${heal} PV.`, 'heal');
+            }
+            gameState.inventory[item]--;
+            renderInventory();
+            updateHealthBars();
+            saveGame();
         }
 
         // Player actions
@@ -534,10 +586,14 @@
         function enemyTurn() {
             if (gameState.enemy.health <= 0) return;
             
-            const damage = Math.max(1, 
-                gameState.enemy.attack[0] + Math.floor(Math.random() * (gameState.enemy.attack[1] - gameState.enemy.attack[0] + 1)) - 
+            let damage = Math.max(1,
+                gameState.enemy.attack[0] + Math.floor(Math.random() * (gameState.enemy.attack[1] - gameState.enemy.attack[0] + 1)) -
                 gameState.player.defense
             );
+            if (gameState.defending) {
+                damage = Math.floor(damage / 2);
+                gameState.defending = false;
+            }
             
             gameState.player.health -= damage;
             
@@ -586,25 +642,12 @@
             updateHealthBars();
             saveGame();
 
-            if (gameState.scenarioStep === 0) {
-                showScenario('Après ce combat, vous trouvez un village. Où allez-vous ?', [
-                    { text: 'Aller à la forge', action: () => { selectJob('forgeron'); gameState.scenarioStep = 1; spawnNewEnemy(); } },
-                    { text: 'Chercher des herbes', action: () => { selectJob('herboriste'); gameState.scenarioStep = 1; spawnNewEnemy(); } }
-                ]);
-            } else {
-                setTimeout(spawnNewEnemy, 2000);
-            }
+            showScenario(gameState.scenarioStep);
         }
 
         // Spawn new enemy
         function spawnNewEnemy() {
-            const enemies = [
-                { name: "Loup des Ombres", level: 4, health: 35, attack: [8, 12], defense: 3, nextAttack: "Morsure" },
-                { name: "Golem de Pierre", level: 5, health: 50, attack: [10, 15], defense: 5, nextAttack: "Coup de poing" },
-                { name: "Esprit Perdu", level: 3, health: 25, attack: [5, 10], defense: 2, nextAttack: "Toucher spectral" }
-            ];
-
-            gameState.enemy = {...enemies[Math.floor(Math.random() * enemies.length)]};
+            gameState.enemy = {...enemiesList[Math.floor(Math.random() * enemiesList.length)]};
             gameState.isPlayerTurn = true;
 
             addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
