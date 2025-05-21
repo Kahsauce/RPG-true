@@ -94,6 +94,7 @@ const enemyHealthBar = document.getElementById('enemy-health');
 const xpBar = document.getElementById('xp-bar');
 const battleLog = document.getElementById('battle-log');
 const playerCharacter = document.getElementById('player-character');
+const playerIcon = document.getElementById('player-icon');
 const enemyCharacter = document.getElementById('enemy-character');
 const playerName = document.getElementById('player-name');
 const playerLevelText = document.getElementById('player-level');
@@ -131,6 +132,10 @@ function updateHealthBars() {
     enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
     enemyName.textContent = gameState.enemy.name;
     playerName.textContent = gameState.player.name;
+    if (playerIcon) {
+        const classIcon = classes[gameState.player.class]?.icon || 'fa-user';
+        playerIcon.className = `fas ${classIcon} text-5xl text-white`;
+    }
     const icons = { mana: 'fa-droplet', energie: 'fa-bolt', rage: 'fa-fire' };
     resourceIcon.className = `fas ${icons[gameState.player.resourceType]} text-purple-400 mr-1`;
 }
@@ -498,6 +503,15 @@ function spawnNewEnemy() {
     updateHealthBars();
     saveGame();
 }
+
+// Expose actions globally for HTML onclick handlers
+window.playerAttack = playerAttack;
+window.playerHeal = playerHeal;
+window.playerDefend = playerDefend;
+window.playerSpecial = playerSpecial;
+window.selectClass = selectClass;
+window.selectJob = selectJob;
+window.chooseTalent = chooseTalent;
 
 // Initialize game
 initialize();
