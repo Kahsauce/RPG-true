@@ -372,8 +372,9 @@ function playerHeal() {
 
 function playerDefend() {
     if (!gameState.isPlayerTurn) return;
-    
+
     addBattleMessage(`Se met en position défensive. La prochaine attaque sera réduite.`, 'player');
+    gameState.defending = true;
     gameState.isPlayerTurn = false;
     setTimeout(enemyTurn, 1500);
 }
