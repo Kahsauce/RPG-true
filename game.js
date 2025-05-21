@@ -35,37 +35,12 @@ const enemiesList = [
 
 const scenarios = [
     {
-        text: 'Après ce combat, vous trouvez un village. Où allez-vous ?',
+        text: 'Après ce combat, que souhaitez-vous faire ?',
         choices: [
-            { text: 'Aller à la forge', action: 'forgeron', next: 1 },
-            { text: 'Chercher des herbes', action: 'herboriste', next: 1 }
-        ]
-    },
-    {
-        text: 'Le village est animé. Voulez-vous visiter le marché ou partir ?',
-        choices: [
-            { text: 'Visiter le marché', action: 'market', next: 2 },
-            { text: 'Continuer la route', action: 'road', next: 2 }
-        ]
-    },
-    {
-        text: "Un vieil alchimiste vous aborde. L'écoutez-vous ?",
-        choices: [
-            { text: 'Apprendre l\'alchimie', action: 'alchimiste', next: 3 },
-            { text: 'Ignorer et partir', action: 'road', next: 3 }
-        ]
-    },
-    {
-        text: 'Plus loin, un ancien temple se dresse devant vous.',
-        choices: [
-            { text: 'Explorer le temple', action: 'temple', next: 4 },
-            { text: 'Le contourner', action: 'road', next: 4 }
-        ]
-    },
-    {
-        text: 'Fin du chapitre. Votre quête continue...',
-        choices: [
-            { text: 'Continuer', action: 'road', next: null }
+            { text: 'Passer à la forge', action: 'forge', next: 0 },
+            { text: 'Visiter le magasin', action: 'shop', next: 0 },
+            { text: 'Se reposer', action: 'rest', next: 0 },
+            { text: 'Continuer la route', action: 'road', next: 0 }
         ]
     }
 ];
@@ -103,7 +78,8 @@ if (!gameState) {
         inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5, resPotion: 2, megaPotion: 1, bomb: 1 },
         battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
         isPlayerTurn: true,
-        scenarioStep: 0
+        scenarioStep: 0,
+        gold: 50
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -117,6 +93,9 @@ if (!gameState) {
             megaPotion: 1,
             bomb: 1
         };
+    }
+    if (gameState.gold === undefined) {
+        gameState.gold = 50;
     }
 }
 
@@ -140,6 +119,7 @@ const enemyHpText = document.getElementById('enemy-hp-text');
 const xpText = document.getElementById('xp-text');
 const playerAttackText = document.getElementById('player-attack-text');
 const playerDefenseText = document.getElementById('player-defense-text');
+const goldText = document.getElementById('gold-text');
 const classModal = document.getElementById('class-modal');
 const advancedModal = document.getElementById('advanced-class-modal');
 const advancedButtons = document.getElementById('advanced-buttons');
@@ -184,6 +164,9 @@ function updateHealthBars() {
     playerName.textContent = gameState.player.name;
     playerAttackText.textContent = gameState.player.attack;
     playerDefenseText.textContent = gameState.player.defense;
+    if (goldText) {
+        goldText.textContent = gameState.gold;
+    }
     if (playerIcon) {
         const classIcon = classes[gameState.player.class]?.icon || 'fa-user';
         playerIcon.className = `fas ${classIcon} text-5xl text-white`;
@@ -328,18 +311,36 @@ function showScenario(step) {
 }
 
 function handleScenarioAction(action) {
-    if (action === 'forgeron' || action === 'herboriste' || action === 'alchimiste') {
-        selectJob(action);
+    if (action === 'forge') {
+        if (gameState.gold >= 30) {
+            gameState.gold -= 30;
+            gameState.player.attack += 2;
+            addBattleMessage('Votre arme est renforcée (+2 attaque).', 'system');
+        } else {
+            addBattleMessage("Pas assez d'or pour la forge.", 'system');
+        }
         spawnNewEnemy();
-    } else if (action === 'temple') {
-        if (!gameState.inventory.megaPotion) gameState.inventory.megaPotion = 0;
-        gameState.inventory.megaPotion++;
-        addBattleMessage('Vous trouvez une méga potion dans le temple.', 'system');
+    } else if (action === 'shop') {
+        if (gameState.gold >= 20) {
+            gameState.gold -= 20;
+            if (!gameState.inventory.potion) gameState.inventory.potion = 0;
+            gameState.inventory.potion++;
+            addBattleMessage('Vous achetez une potion pour 20 or.', 'system');
+        } else {
+            addBattleMessage("Vous n'avez pas assez d'or.", 'system');
+        }
+        renderInventory();
+        spawnNewEnemy();
+    } else if (action === 'rest') {
+        const heal = Math.floor(gameState.player.maxHealth / 2);
+        gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+        addBattleMessage(`Vous vous reposez et récupérez ${heal} PV.`, 'system');
         spawnNewEnemy();
     } else {
-        addBattleMessage('Vous décidez de ' + action + '.', 'system');
         spawnNewEnemy();
     }
+    updateHealthBars();
+    saveGame();
 }
 
 function renderInventory() {
