@@ -9,6 +9,6 @@ votre progression automatiquement dans `localStorage`.
 
 ### Développement
 
-Le code JavaScript se trouve en bas de `Index.html`. Les données (ennemis,
+Le code JavaScript se trouve maintenant dans `game.js` et les styles dans `style.css`. Les données (ennemis,
 scénarios, inventaire) sont structurées pour faciliter l'ajout de nouveaux
 éléments.
