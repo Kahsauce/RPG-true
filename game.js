@@ -111,6 +111,8 @@ const enemyName = document.getElementById('enemy-name');
 const enemyLevelText = document.getElementById('enemy-level');
 const enemyHpText = document.getElementById('enemy-hp-text');
 const xpText = document.getElementById('xp-text');
+const playerAttackText = document.getElementById('player-attack-text');
+const playerDefenseText = document.getElementById('player-defense-text');
 const classModal = document.getElementById('class-modal');
 const advancedModal = document.getElementById('advanced-class-modal');
 const advancedButtons = document.getElementById('advanced-buttons');
@@ -137,6 +139,8 @@ function updateHealthBars() {
     enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
     enemyName.textContent = gameState.enemy.name;
     playerName.textContent = gameState.player.name;
+    playerAttackText.textContent = gameState.player.attack;
+    playerDefenseText.textContent = gameState.player.defense;
     if (playerIcon) {
         const classIcon = classes[gameState.player.class]?.icon || 'fa-user';
         playerIcon.className = `fas ${classIcon} text-5xl text-white`;
@@ -368,15 +372,24 @@ function playerAttack() {
 function playerHeal() {
     if (!gameState.isPlayerTurn) return;
 
-    const healAmount = gameState.player.heal();
-    
-    // Animation
+    const result = gameState.player.heal();
+    if (!result) {
+        addBattleMessage(`Pas assez de ${gameState.player.resourceType}...`, 'system');
+        return;
+    }
+
+    const messages = {
+        shield: 'Bouclier levé! Dégâts réduits au prochain coup.',
+        dodge: 'En garde! Vous esquiverez la prochaine attaque.',
+        manaShield: 'Bouclier magique actif!'
+    };
+
     playerCharacter.classList.add('heal-animation');
     setTimeout(() => {
         playerCharacter.classList.remove('heal-animation');
     }, 1000);
-    
-    addBattleMessage(`Récupère ${healAmount} points de vie.`, 'heal');
+
+    addBattleMessage(messages[result], 'player');
     updateHealthBars();
     gameState.isPlayerTurn = false;
     setTimeout(enemyTurn, 1500);
@@ -467,8 +480,17 @@ function enemyDefeated() {
 
 // Spawn new enemy
 function spawnNewEnemy() {
-    gameState.enemy = new Enemy({ ...enemiesList[Math.floor(Math.random() * enemiesList.length)] });
-    gameState.enemy.maxHealth = gameState.enemy.health;
+    const base = { ...enemiesList[Math.floor(Math.random() * enemiesList.length)] };
+    const levelBoost = Math.floor(Math.random() * 3);
+    base.level = gameState.player.level + levelBoost;
+    base.maxHealth += gameState.player.level * 5 + levelBoost * 10;
+    base.health = base.maxHealth;
+    base.attackRange = [
+        base.attackRange[0] + levelBoost * 2,
+        base.attackRange[1] + levelBoost * 2
+    ];
+    base.defense += Math.floor(gameState.player.level / 2);
+    gameState.enemy = new Enemy(base);
     gameState.isPlayerTurn = true;
 
     addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
