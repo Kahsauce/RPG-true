@@ -52,7 +52,11 @@ function saveGame() {
 
 function loadGame() {
     const data = localStorage.getItem('luminaSave');
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+    const obj = JSON.parse(data);
+    if (obj.player) obj.player = new Player(obj.player);
+    if (obj.enemy) obj.enemy = new Enemy(obj.enemy);
+    return obj;
 }
 
 /* --------- État du jeu --------- */
@@ -60,7 +64,7 @@ let gameState = loadGame();
 if (!gameState) {
     gameState = {
         player: null,
-        enemy: {
+        enemy: new Enemy({
             name: 'Loup des Ombres',
             level: 1,
             health: 30,
@@ -68,12 +72,11 @@ if (!gameState) {
             attack: [5, 8],
             defense: 2,
             nextAttack: 'Morsure'
-        },
+        }),
         inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5, resPotion: 2 },
         battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
         isPlayerTurn: true,
-        scenarioStep: 0,
-        defending: false
+        scenarioStep: 0
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -175,7 +178,7 @@ function initialize() {
 
 function selectClass(cl) {
     const info = classes[cl];
-    gameState.player = {
+    gameState.player = new Player({
         name: 'Aelar',
         class: cl,
         level: 1,
@@ -191,7 +194,7 @@ function selectClass(cl) {
         job: null,
         talents: [],
         advancedClass: null
-    };
+    });
     classModal.classList.add('hidden');
     addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
     updateHealthBars();
@@ -333,12 +336,7 @@ function useItem(item) {
 function playerAttack() {
     if (!gameState.isPlayerTurn) return;
 
-    const damage = Math.max(1, gameState.player.attack - gameState.enemy.defense + Math.floor(Math.random() * 3));
-    gameState.enemy.health -= damage;
-
-    if (gameState.player.resourceType === 'rage') {
-        gameState.player.resource = Math.min(gameState.player.maxResource, gameState.player.resource + 10);
-    }
+    const damage = gameState.player.attack(gameState.enemy);
 
     // Animation
     enemyCharacter.classList.add('damage-animation');
@@ -361,9 +359,8 @@ function playerAttack() {
 
 function playerHeal() {
     if (!gameState.isPlayerTurn) return;
-    
-    const healAmount = 10 + Math.floor(Math.random() * 5);
-    gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + healAmount);
+
+    const healAmount = gameState.player.heal();
     
     // Animation
     playerCharacter.classList.add('heal-animation');
@@ -381,7 +378,7 @@ function playerDefend() {
     if (!gameState.isPlayerTurn) return;
 
     addBattleMessage(`Se met en position défensive. La prochaine attaque sera réduite.`, 'player');
-    gameState.defending = true;
+    gameState.player.defend();
     gameState.isPlayerTurn = false;
     setTimeout(enemyTurn, 1500);
 }
@@ -389,17 +386,11 @@ function playerDefend() {
 function playerSpecial() {
     if (!gameState.isPlayerTurn) return;
 
-    const costs = { mana: 30, energie: 20, rage: 50 };
-    const type = gameState.player.resourceType;
-    const cost = costs[type];
-    if (gameState.player.resource < cost) {
-        addBattleMessage(`Pas assez de ${type} pour l'attaque spéciale.`, 'system');
+    const damage = gameState.player.special(gameState.enemy);
+    if (damage === null) {
+        addBattleMessage(`Pas assez de ${gameState.player.resourceType} pour l'attaque spéciale.`, 'system');
         return;
     }
-    gameState.player.resource -= cost;
-
-    const damage = 15 + Math.floor(Math.random() * 5);
-    gameState.enemy.health -= damage;
     
     // Animation
     enemyCharacter.classList.add('damage-animation');
@@ -424,21 +415,8 @@ function playerSpecial() {
 // Enemy turn
 function enemyTurn() {
     if (gameState.enemy.health <= 0) return;
-    
-    let damage = Math.max(1,
-        gameState.enemy.attack[0] + Math.floor(Math.random() * (gameState.enemy.attack[1] - gameState.enemy.attack[0] + 1)) -
-        gameState.player.defense
-    );
-    if (gameState.defending) {
-        damage = Math.floor(damage / 2);
-        gameState.defending = false;
-    }
-    
-    gameState.player.health -= damage;
 
-    if (gameState.player.resourceType === 'rage') {
-        gameState.player.resource = Math.min(gameState.player.maxResource, gameState.player.resource + 5);
-    }
+    const damage = gameState.enemy.attack(gameState.player);
 
     // Animation
     playerCharacter.classList.add('damage-animation');
@@ -447,15 +425,10 @@ function enemyTurn() {
     }, 300);
     
     addBattleMessage(`${gameState.enemy.name} utilise ${gameState.enemy.nextAttack} et inflige ${damage} points de dégâts!`, 'enemy');
-    
+
     if (gameState.player.health <= 0) {
         gameState.player.health = 0;
         addBattleMessage(`${gameState.player.name} a été vaincu!`, 'system');
-    }
-
-    const regen = { mana: 5, energie: 3 };
-    if (regen[gameState.player.resourceType]) {
-        gameState.player.resource = Math.min(gameState.player.maxResource, gameState.player.resource + regen[gameState.player.resourceType]);
     }
 
     updateHealthBars();
@@ -465,21 +438,12 @@ function enemyTurn() {
 // Enemy defeated
 function enemyDefeated() {
     const xpGained = 15 + Math.floor(Math.random() * 10);
-    gameState.player.xp += xpGained;
+    const levels = gameState.player.gainXp(xpGained);
 
     addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
 
-    while (gameState.player.xp >= gameState.player.nextLevelXp) {
-        gameState.player.xp -= gameState.player.nextLevelXp;
-        gameState.player.level++;
-        gameState.player.maxHealth += 10;
-        gameState.player.health = gameState.player.maxHealth;
-        gameState.player.attack += 2;
-        gameState.player.defense += 1;
-        gameState.player.nextLevelXp = Math.floor(gameState.player.nextLevelXp * 1.2);
-
+    if (levels > 0) {
         addBattleMessage(`Niveau augmenté à ${gameState.player.level}! Statistiques améliorées.`, 'system');
-
         if (!gameState.player.advancedClass && gameState.player.level >= 3) {
             showAdvancedOptions();
         } else {
@@ -495,7 +459,7 @@ function enemyDefeated() {
 
 // Spawn new enemy
 function spawnNewEnemy() {
-    gameState.enemy = {...enemiesList[Math.floor(Math.random() * enemiesList.length)]};
+    gameState.enemy = new Enemy({ ...enemiesList[Math.floor(Math.random() * enemiesList.length)] });
     gameState.enemy.maxHealth = gameState.enemy.health;
     gameState.isPlayerTurn = true;
 
