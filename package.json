@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Minimalist RPG prototype",
   "scripts": {
-    "test": "node tests/loadGame.test.js",
+    "test": "node tests/runAllTests.js",
     "start": "node server.js"
   },
   "license": "MIT"

@@ -22,10 +22,10 @@ const talents = {
 };
 
 const enemiesList = [
-    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attack: [8,12], defense: 3, nextAttack: "Morsure" },
-    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attack: [10,15], defense: 5, nextAttack: "Coup de poing" },
-    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attack: [5,10], defense: 2, nextAttack: "Toucher spectral" },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attack: [9,14], defense: 4, nextAttack: "Lame ténébreuse" }
+    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure" },
+    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing" },
+    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral" },
+    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse" }
 ];
 
 const scenarios = [
@@ -71,7 +71,7 @@ if (!gameState) {
             level: 1,
             health: 30,
             maxHealth: 30,
-            attack: [5, 8],
+            attackRange: [5, 8],
             defense: 2,
             nextAttack: 'Morsure'
         }),

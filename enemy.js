@@ -12,7 +12,7 @@ class Enemy {
     attack(player) {
         let damage = Math.max(
             1,
-            this.attack[0] + Math.floor(Math.random() * (this.attack[1] - this.attack[0] + 1)) - player.defense
+            this.attackRange[0] + Math.floor(Math.random() * (this.attackRange[1] - this.attackRange[0] + 1)) - player.defense
         );
         player.takeDamage(damage);
         return damage;
