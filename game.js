@@ -121,8 +121,9 @@ function updateHealthBars() {
     playerHealthBar.style.width = `${(gameState.player.health / gameState.player.maxHealth) * 100}%`;
     enemyHealthBar.style.width = `${(gameState.enemy.health / gameState.enemy.maxHealth) * 100}%`;
     playerResourceBar.style.width = `${(gameState.player.resource / gameState.player.maxResource) * 100}%`;
-    xpBar.style.width = `${gameState.player.xp}%`;
-    xpText.textContent = `${gameState.player.xp}% XP`;
+    const xpPercent = (gameState.player.xp / gameState.player.nextLevelXp) * 100;
+    xpBar.style.width = `${xpPercent}%`;
+    xpText.textContent = `${gameState.player.xp}/${gameState.player.nextLevelXp} XP`;
     playerHpText.textContent = `${gameState.player.health}/${gameState.player.maxHealth}`;
     playerResourceText.textContent = `${gameState.player.resource}/${gameState.player.maxResource}`;
     enemyHpText.textContent = `${gameState.enemy.health}/${gameState.enemy.maxHealth}`;
@@ -152,9 +153,10 @@ function addBattleMessage(message, type = 'system') {
             ? gameState.enemy.name
             : 'Système';
     messageElement.innerHTML = `<span class="text-${colors[type]}">[${speaker}]</span> ${message}`;
-    
+
     battleLog.appendChild(messageElement);
     battleLog.scrollTop = battleLog.scrollHeight;
+    console.log(`[${speaker}] ${message}`);
 }
 
 function initialize() {
@@ -458,17 +460,17 @@ function enemyTurn() {
 // Enemy defeated
 function enemyDefeated() {
     const xpGained = 15 + Math.floor(Math.random() * 10);
-    gameState.player.xp = Math.min(100, gameState.player.xp + xpGained);
+    gameState.player.xp += xpGained;
 
     addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
 
-    if (gameState.player.xp >= 100) {
+    while (gameState.player.xp >= gameState.player.nextLevelXp) {
+        gameState.player.xp -= gameState.player.nextLevelXp;
         gameState.player.level++;
         gameState.player.maxHealth += 10;
         gameState.player.health = gameState.player.maxHealth;
         gameState.player.attack += 2;
         gameState.player.defense += 1;
-        gameState.player.xp = 0;
         gameState.player.nextLevelXp = Math.floor(gameState.player.nextLevelXp * 1.2);
 
         addBattleMessage(`Niveau augmenté à ${gameState.player.level}! Statistiques améliorées.`, 'system');
