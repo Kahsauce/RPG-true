@@ -75,6 +75,17 @@ if (!gameState) {
         scenarioStep: 0,
         defending: false
     };
+} else {
+    // Garantir la présence de l'inventaire pour les anciennes sauvegardes
+    if (!gameState.inventory) {
+        gameState.inventory = {
+            potion: 3,
+            firePotion: 2,
+            shield: 1,
+            herb: 5,
+            resPotion: 2
+        };
+    }
 }
 
 // DOM Elements
@@ -269,6 +280,9 @@ function renderInventory() {
         herb: { name: 'Herbe curative', icon: 'fa-leaf' },
         resPotion: { name: 'Potion de ressource', icon: 'fa-bolt' }
     };
+    if (!gameState.inventory) {
+        gameState.inventory = {};
+    }
     Object.keys(gameState.inventory).forEach(key => {
         const count = gameState.inventory[key];
         if (count <= 0) return;
