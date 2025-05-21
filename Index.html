@@ -50,16 +50,16 @@
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="playerAttack()" class="action-btn bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700">
+                    <button id="attack-btn" class="action-btn bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700">
                         <i class="fas fa-bolt mr-2"></i> Attaquer
                     </button>
-                    <button onclick="playerHeal()" class="action-btn bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
+                    <button id="heal-btn" class="action-btn bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
                         <i class="fas fa-heart mr-2"></i> Soin
                     </button>
-                    <button onclick="playerDefend()" class="action-btn bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700">
+                    <button id="defend-btn" class="action-btn bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700">
                         <i class="fas fa-shield-alt mr-2"></i> Défense
                     </button>
-                    <button onclick="playerSpecial()" class="action-btn bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700">
+                    <button id="special-btn" class="action-btn bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700">
                         <i class="fas fa-star mr-2"></i> Spécial
                     </button>
                 </div>
@@ -142,9 +142,9 @@
         <div class="bg-gray-800 p-6 rounded-xl space-y-4">
             <h2 class="text-lg font-bold">Choisissez votre classe</h2>
             <div class="grid grid-cols-3 gap-2">
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('guerrier')">Guerrier</button>
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('mage')">Mage</button>
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('voleur')">Voleur</button>
+                <button id="class-guerrier-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Guerrier</button>
+                <button id="class-mage-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Mage</button>
+                <button id="class-voleur-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Voleur</button>
             </div>
         </div>
     </div>
@@ -160,8 +160,8 @@
         <div class="bg-gray-800 p-6 rounded-xl space-y-4">
             <h2 class="text-lg font-bold mb-2">Choisissez un métier</h2>
             <div class="grid grid-cols-2 gap-2">
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectJob('forgeron')">Forgeron</button>
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectJob('herboriste')">Herboriste</button>
+                <button id="job-forgeron-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Forgeron</button>
+                <button id="job-herboriste-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Herboriste</button>
             </div>
         </div>
     </div>
@@ -170,8 +170,8 @@
         <div class="bg-gray-800 p-6 rounded-xl space-y-4">
             <h2 class="text-lg font-bold mb-2">Choisissez un talent</h2>
             <div class="grid grid-cols-2 gap-2">
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="chooseTalent('force')">Force accrue</button>
-                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="chooseTalent('protection')">Protection renforcée</button>
+                <button id="talent-force-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Force accrue</button>
+                <button id="talent-protection-btn" class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800">Protection renforcée</button>
             </div>
         </div>
     </div>

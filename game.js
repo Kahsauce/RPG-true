@@ -116,6 +116,32 @@ const scenarioText = document.getElementById('scenario-text');
 const scenarioButtons = document.getElementById('scenario-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
 
+// Buttons
+const attackBtn = document.getElementById('attack-btn');
+const healBtn = document.getElementById('heal-btn');
+const defendBtn = document.getElementById('defend-btn');
+const specialBtn = document.getElementById('special-btn');
+const classGuerrierBtn = document.getElementById('class-guerrier-btn');
+const classMageBtn = document.getElementById('class-mage-btn');
+const classVoleurBtn = document.getElementById('class-voleur-btn');
+const jobForgeronBtn = document.getElementById('job-forgeron-btn');
+const jobHerboristeBtn = document.getElementById('job-herboriste-btn');
+const talentForceBtn = document.getElementById('talent-force-btn');
+const talentProtectionBtn = document.getElementById('talent-protection-btn');
+
+// Register event listeners
+attackBtn?.addEventListener('click', playerAttack);
+healBtn?.addEventListener('click', playerHeal);
+defendBtn?.addEventListener('click', playerDefend);
+specialBtn?.addEventListener('click', playerSpecial);
+classGuerrierBtn?.addEventListener('click', () => selectClass('guerrier'));
+classMageBtn?.addEventListener('click', () => selectClass('mage'));
+classVoleurBtn?.addEventListener('click', () => selectClass('voleur'));
+jobForgeronBtn?.addEventListener('click', () => selectJob('forgeron'));
+jobHerboristeBtn?.addEventListener('click', () => selectJob('herboriste'));
+talentForceBtn?.addEventListener('click', () => chooseTalent('force'));
+talentProtectionBtn?.addEventListener('click', () => chooseTalent('protection'));
+
 // Update health bars
 function updateHealthBars() {
     if (!gameState.player) return;
