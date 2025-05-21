@@ -19,8 +19,8 @@ possibles :
      ligne.
 
 2. **Serveur local**
-   - Depuis le dossier du projet, lancez par exemple `python -m http.server` puis
-     ouvrez `http://localhost:8000` dans votre navigateur.
+   - Exécutez `npm start` pour lancer un petit serveur Node et ouvrir le jeu sur http://localhost:8080.
+   - Vous pouvez également utiliser `python -m http.server` puis ouvrir `http://localhost:8000`.
 
 Le jeu utilise Tailwind et Font Awesome via des CDN ; une connexion Internet est
 nécessaire lors de l'exécution.
