@@ -1,0 +1,33 @@
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .character-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .damage-animation {
+            animation: shake 0.3s linear, pulse 0.3s linear;
+        }
+        .heal-animation {
+            animation: pulse 1s linear;
+        }
+        .bg-custom {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        .frosted-glass {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .health-bar {
+            transition: width 0.5s ease;
+        }
+
