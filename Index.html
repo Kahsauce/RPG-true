@@ -54,11 +54,11 @@
             <!-- Player Section -->
             <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-blue-300">Aelar</h2>
+                    <h2 id="player-name" class="text-2xl font-bold text-blue-300">Aelar</h2>
                     <div class="flex space-x-2">
-                        <span class="px-3 py-1 bg-blue-900/50 rounded-full text-sm">Niv. 5</span>
+                        <span id="player-level" class="px-3 py-1 bg-blue-900/50 rounded-full text-sm">Niv. 1</span>
                         <span class="px-3 py-1 bg-green-900/50 rounded-full text-sm flex items-center">
-                            <i class="fas fa-heart text-red-400 mr-1"></i> 42/50
+                            <i class="fas fa-heart text-red-400 mr-1"></i> <span id="player-hp-text">0/0</span>
                         </span>
                     </div>
                 </div>
@@ -104,20 +104,20 @@
                 
                 <div class="mt-4 flex items-center">
                     <div class="flex-1 bg-gray-700/50 rounded-full h-2">
-                        <div id="xp-bar" class="health-bar bg-gradient-to-r from-yellow-400 to-amber-500 h-full rounded-full" style="width: 45%"></div>
+                        <div id="xp-bar" class="health-bar bg-gradient-to-r from-yellow-400 to-amber-500 h-full rounded-full" style="width: 0%"></div>
                     </div>
-                    <span class="ml-2 text-sm text-yellow-300">45% XP</span>
+                    <span id="xp-text" class="ml-2 text-sm text-yellow-300">0% XP</span>
                 </div>
             </div>
             
             <!-- Enemy Section -->
             <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-red-300">Loup des Ombres</h2>
+                    <h2 id="enemy-name" class="text-2xl font-bold text-red-300">Ennemi</h2>
                     <div class="flex space-x-2">
-                        <span class="px-3 py-1 bg-red-900/50 rounded-full text-sm">Niv. 4</span>
+                        <span id="enemy-level" class="px-3 py-1 bg-red-900/50 rounded-full text-sm">Niv. 1</span>
                         <span class="px-3 py-1 bg-green-900/50 rounded-full text-sm flex items-center">
-                            <i class="fas fa-heart text-red-400 mr-1"></i> 28/35
+                            <i class="fas fa-heart text-red-400 mr-1"></i> <span id="enemy-hp-text">0/0</span>
                         </span>
                     </div>
                 </div>
@@ -199,34 +199,105 @@
         </div>
     </div>
 
+    <!-- Modales de choix -->
+    <div id="class-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold">Choisissez votre classe</h2>
+            <div class="grid grid-cols-3 gap-2">
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('guerrier')">Guerrier</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('mage')">Mage</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectClass('voleur')">Voleur</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="advanced-class-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold mb-2">Évolution de classe</h2>
+            <div id="advanced-buttons" class="grid grid-cols-2 gap-2"></div>
+        </div>
+    </div>
+
+    <div id="job-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold mb-2">Choisissez un métier</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectJob('forgeron')">Forgeron</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="selectJob('herboriste')">Herboriste</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="talent-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold mb-2">Choisissez un talent</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="chooseTalent('force')">Force accrue</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="chooseTalent('protection')">Protection renforcée</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scenario-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <p id="scenario-text" class="mb-4"></p>
+            <div id="scenario-buttons" class="grid grid-cols-2 gap-2"></div>
+        </div>
+    </div>
+
     <script>
-        // Game State
-        const gameState = {
-            player: {
-                name: "Aelar",
-                level: 5,
-                health: 50,
-                maxHealth: 50,
-                attack: 12,
-                defense: 5,
-                xp: 45,
-                nextLevelXp: 100
-            },
-            enemy: {
-                name: "Loup des Ombres",
-                level: 4,
-                health: 28,
-                maxHealth: 35,
-                attack: [8, 12],
-                defense: 3,
-                nextAttack: "Morsure"
-            },
-            battleLog: [
-                "[Système] Bienvenue dans Lumina. Préparez-vous au combat!",
-                "[Aelar] Un loup des ombres apparaît!"
-            ],
-            isPlayerTurn: true
+        /* --------- Données de base --------- */
+        const classes = {
+            guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved' },
+            mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard' },
+            voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja' }
         };
+
+        const advancedClasses = {
+            guerrier: { chevalier: { name: 'Chevalier', attack: 2, defense: 2 } },
+            mage: { archimage: { name: 'Archimage', attack: 3, defense: 0 } },
+            voleur: { assassin: { name: 'Assassin', attack: 3, defense: 1 } }
+        };
+
+        const jobs = {
+            forgeron: { name: 'Forgeron', bonus: { attack: 2 } },
+            herboriste: { name: 'Herboriste', bonus: { maxHealth: 5 } }
+        };
+
+        const talents = {
+            force: { name: 'Force accrue', bonus: { attack: 2 } },
+            protection: { name: 'Protection renforcée', bonus: { defense: 2 } }
+        };
+
+        /* --------- Chargement/Sauvegarde --------- */
+        function saveGame() {
+            localStorage.setItem('luminaSave', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const data = localStorage.getItem('luminaSave');
+            return data ? JSON.parse(data) : null;
+        }
+
+        /* --------- État du jeu --------- */
+        let gameState = loadGame();
+        if (!gameState) {
+            gameState = {
+                player: null,
+                enemy: {
+                    name: 'Loup des Ombres',
+                    level: 1,
+                    health: 30,
+                    maxHealth: 30,
+                    attack: [5, 8],
+                    defense: 2,
+                    nextAttack: 'Morsure'
+                },
+                battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
+                isPlayerTurn: true,
+                scenarioStep: 0
+            };
+        }
 
         // DOM Elements
         const playerHealthBar = document.getElementById('player-health');
@@ -235,12 +306,35 @@
         const battleLog = document.getElementById('battle-log');
         const playerCharacter = document.getElementById('player-character');
         const enemyCharacter = document.getElementById('enemy-character');
+        const playerName = document.getElementById('player-name');
+        const playerLevelText = document.getElementById('player-level');
+        const playerHpText = document.getElementById('player-hp-text');
+        const enemyName = document.getElementById('enemy-name');
+        const enemyLevelText = document.getElementById('enemy-level');
+        const enemyHpText = document.getElementById('enemy-hp-text');
+        const xpText = document.getElementById('xp-text');
+        const classModal = document.getElementById('class-modal');
+        const advancedModal = document.getElementById('advanced-class-modal');
+        const advancedButtons = document.getElementById('advanced-buttons');
+        const jobModal = document.getElementById('job-modal');
+        const talentModal = document.getElementById('talent-modal');
+        const scenarioModal = document.getElementById('scenario-modal');
+        const scenarioText = document.getElementById('scenario-text');
+        const scenarioButtons = document.getElementById('scenario-buttons');
 
         // Update health bars
         function updateHealthBars() {
+            if (!gameState.player) return;
             playerHealthBar.style.width = `${(gameState.player.health / gameState.player.maxHealth) * 100}%`;
             enemyHealthBar.style.width = `${(gameState.enemy.health / gameState.enemy.maxHealth) * 100}%`;
             xpBar.style.width = `${gameState.player.xp}%`;
+            xpText.textContent = `${gameState.player.xp}% XP`;
+            playerHpText.textContent = `${gameState.player.health}/${gameState.player.maxHealth}`;
+            enemyHpText.textContent = `${gameState.enemy.health}/${gameState.enemy.maxHealth}`;
+            playerLevelText.textContent = `Niv. ${gameState.player.level}`;
+            enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
+            enemyName.textContent = gameState.enemy.name;
+            playerName.textContent = gameState.player.name;
         }
 
         // Add message to battle log
@@ -255,10 +349,107 @@
             
             const messageElement = document.createElement('div');
             messageElement.className = `text-sm p-3 bg-blue-900/30 rounded-lg`;
-            messageElement.innerHTML = `<span class="text-${colors[type]}">[${type === 'player' ? gameState.player.name : type === 'enemy' ? gameState.enemy.name : 'Système'}]</span> ${message}`;
+            const speaker = type === 'player'
+                ? (gameState.player ? gameState.player.name : 'Joueur')
+                : type === 'enemy'
+                    ? gameState.enemy.name
+                    : 'Système';
+            messageElement.innerHTML = `<span class="text-${colors[type]}">[${speaker}]</span> ${message}`;
             
             battleLog.appendChild(messageElement);
             battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        function initialize() {
+            if (!gameState.player) {
+                classModal.classList.remove('hidden');
+            } else {
+                updateHealthBars();
+            }
+        }
+
+        function selectClass(cl) {
+            const info = classes[cl];
+            gameState.player = {
+                name: 'Aelar',
+                class: cl,
+                level: 1,
+                health: info.maxHealth,
+                maxHealth: info.maxHealth,
+                attack: info.attack,
+                defense: info.defense,
+                xp: 0,
+                nextLevelXp: 100,
+                job: null,
+                talents: [],
+                advancedClass: null
+            };
+            classModal.classList.add('hidden');
+            addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
+            updateHealthBars();
+            saveGame();
+        }
+
+        function showAdvancedOptions() {
+            const adv = advancedClasses[gameState.player.class];
+            advancedButtons.innerHTML = '';
+            for (const key in adv) {
+                const b = document.createElement('button');
+                b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
+                b.textContent = adv[key].name;
+                b.onclick = () => selectAdvancedClass(key);
+                advancedButtons.appendChild(b);
+            }
+            advancedModal.classList.remove('hidden');
+        }
+
+        function selectAdvancedClass(key) {
+            const adv = advancedClasses[gameState.player.class][key];
+            gameState.player.advancedClass = adv.name;
+            gameState.player.attack += adv.attack;
+            gameState.player.defense += adv.defense;
+            advancedModal.classList.add('hidden');
+            addBattleMessage(`Évolution en ${adv.name}!`, 'system');
+            updateHealthBars();
+            saveGame();
+        }
+
+        function selectJob(jobName) {
+            const job = jobs[jobName];
+            gameState.player.job = job.name;
+            if (job.bonus.attack) gameState.player.attack += job.bonus.attack;
+            if (job.bonus.maxHealth) {
+                gameState.player.maxHealth += job.bonus.maxHealth;
+                gameState.player.health += job.bonus.maxHealth;
+            }
+            jobModal.classList.add('hidden');
+            addBattleMessage(`Vous êtes maintenant ${job.name}.`, 'system');
+            updateHealthBars();
+            saveGame();
+        }
+
+        function chooseTalent(t) {
+            const talent = talents[t];
+            gameState.player.talents.push(talent.name);
+            if (talent.bonus.attack) gameState.player.attack += talent.bonus.attack;
+            if (talent.bonus.defense) gameState.player.defense += talent.bonus.defense;
+            talentModal.classList.add('hidden');
+            addBattleMessage(`Nouveau talent : ${talent.name}`, 'system');
+            updateHealthBars();
+            saveGame();
+        }
+
+        function showScenario(text, choices) {
+            scenarioText.textContent = text;
+            scenarioButtons.innerHTML = '';
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
+                btn.textContent = c.text;
+                btn.onclick = () => { scenarioModal.classList.add('hidden'); c.action(); };
+                scenarioButtons.appendChild(btn);
+            });
+            scenarioModal.classList.remove('hidden');
         }
 
         // Player actions
@@ -371,9 +562,9 @@
         function enemyDefeated() {
             const xpGained = 15 + Math.floor(Math.random() * 10);
             gameState.player.xp = Math.min(100, gameState.player.xp + xpGained);
-            
+
             addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
-            
+
             if (gameState.player.xp >= 100) {
                 gameState.player.level++;
                 gameState.player.maxHealth += 10;
@@ -382,14 +573,27 @@
                 gameState.player.defense += 1;
                 gameState.player.xp = 0;
                 gameState.player.nextLevelXp = Math.floor(gameState.player.nextLevelXp * 1.2);
-                
+
                 addBattleMessage(`Niveau augmenté à ${gameState.player.level}! Statistiques améliorées.`, 'system');
+
+                if (!gameState.player.advancedClass && gameState.player.level >= 3) {
+                    showAdvancedOptions();
+                } else {
+                    talentModal.classList.remove('hidden');
+                }
             }
-            
+
             updateHealthBars();
-            
-            // Spawn new enemy after delay
-            setTimeout(spawnNewEnemy, 2000);
+            saveGame();
+
+            if (gameState.scenarioStep === 0) {
+                showScenario('Après ce combat, vous trouvez un village. Où allez-vous ?', [
+                    { text: 'Aller à la forge', action: () => { selectJob('forgeron'); gameState.scenarioStep = 1; spawnNewEnemy(); } },
+                    { text: 'Chercher des herbes', action: () => { selectJob('herboriste'); gameState.scenarioStep = 1; spawnNewEnemy(); } }
+                ]);
+            } else {
+                setTimeout(spawnNewEnemy, 2000);
+            }
         }
 
         // Spawn new enemy
@@ -399,16 +603,17 @@
                 { name: "Golem de Pierre", level: 5, health: 50, attack: [10, 15], defense: 5, nextAttack: "Coup de poing" },
                 { name: "Esprit Perdu", level: 3, health: 25, attack: [5, 10], defense: 2, nextAttack: "Toucher spectral" }
             ];
-            
+
             gameState.enemy = {...enemies[Math.floor(Math.random() * enemies.length)]};
             gameState.isPlayerTurn = true;
-            
+
             addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
             updateHealthBars();
+            saveGame();
         }
 
         // Initialize game
-        updateHealthBars();
+        initialize();
     </script>
 </body>
 </html>
