@@ -255,7 +255,13 @@ function chooseTalent(t) {
 
 function showScenario(step) {
     const sc = scenarios[step];
-    if (!sc) return;
+    // If there is no scenario for this step, simply continue the game by
+    // spawning a new enemy. This prevents the game from freezing when the
+    // scenario chain ends.
+    if (!sc) {
+        spawnNewEnemy();
+        return;
+    }
     scenarioText.textContent = sc.text;
     scenarioButtons.innerHTML = '';
     sc.choices.forEach(c => {
