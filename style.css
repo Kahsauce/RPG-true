@@ -30,4 +30,11 @@
         .health-bar {
             transition: width 0.5s ease;
         }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .death-animation {
+            animation: fadeOut 2s forwards;
+        }
 
