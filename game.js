@@ -129,6 +129,8 @@ const scenarioModal = document.getElementById('scenario-modal');
 const scenarioText = document.getElementById('scenario-text');
 const scenarioButtons = document.getElementById('scenario-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
+const shopModal = document.getElementById('shop-modal');
+const forgeModal = document.getElementById('forge-modal');
 
 function playSound(type) {
     try {
@@ -312,25 +314,11 @@ function showScenario(step) {
 
 function handleScenarioAction(action) {
     if (action === 'forge') {
-        if (gameState.gold >= 30) {
-            gameState.gold -= 30;
-            gameState.player.attack += 2;
-            addBattleMessage('Votre arme est renforcée (+2 attaque).', 'system');
-        } else {
-            addBattleMessage("Pas assez d'or pour la forge.", 'system');
-        }
-        spawnNewEnemy();
+        showForge();
+        return;
     } else if (action === 'shop') {
-        if (gameState.gold >= 20) {
-            gameState.gold -= 20;
-            if (!gameState.inventory.potion) gameState.inventory.potion = 0;
-            gameState.inventory.potion++;
-            addBattleMessage('Vous achetez une potion pour 20 or.', 'system');
-        } else {
-            addBattleMessage("Vous n'avez pas assez d'or.", 'system');
-        }
-        renderInventory();
-        spawnNewEnemy();
+        showShop();
+        return;
     } else if (action === 'rest') {
         const heal = Math.floor(gameState.player.maxHealth / 2);
         gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
@@ -338,6 +326,69 @@ function handleScenarioAction(action) {
         spawnNewEnemy();
     } else {
         spawnNewEnemy();
+    }
+    updateHealthBars();
+    saveGame();
+}
+
+function showShop() {
+    shopModal.classList.remove('hidden');
+}
+
+function closeShop() {
+    shopModal.classList.add('hidden');
+    spawnNewEnemy();
+    updateHealthBars();
+    saveGame();
+}
+
+function buyItem(item) {
+    const prices = { potion: 20, megaPotion: 50, resPotion: 30 };
+    const names = {
+        potion: 'une potion',
+        megaPotion: 'une méga potion',
+        resPotion: 'une potion de ressource'
+    };
+    const price = prices[item];
+    if (gameState.gold >= price) {
+        gameState.gold -= price;
+        if (!gameState.inventory[item]) gameState.inventory[item] = 0;
+        gameState.inventory[item]++;
+        addBattleMessage(`Vous achetez ${names[item]} pour ${price} or.`, 'system');
+    } else {
+        addBattleMessage("Vous n'avez pas assez d'or.", 'system');
+    }
+    renderInventory();
+    updateHealthBars();
+    saveGame();
+}
+
+function showForge() {
+    forgeModal.classList.remove('hidden');
+}
+
+function closeForge() {
+    forgeModal.classList.add('hidden');
+    spawnNewEnemy();
+    updateHealthBars();
+    saveGame();
+}
+
+function buyForge(type) {
+    const price = 50;
+    if (gameState.gold < price) {
+        addBattleMessage("Pas assez d'or pour la forge.", 'system');
+        updateHealthBars();
+        saveGame();
+        return;
+    }
+    gameState.gold -= price;
+    if (type === 'weapon') {
+        gameState.player.attack += 3;
+        addBattleMessage('Votre arme est améliorée (+3 attaque).', 'system');
+    } else {
+        gameState.player.defense += 3;
+        addBattleMessage('Vous achetez une armure (+3 défense).', 'system');
     }
     updateHealthBars();
     saveGame();
@@ -577,6 +628,10 @@ window.playerSpecial = playerSpecial;
 window.selectClass = selectClass;
 window.selectJob = selectJob;
 window.chooseTalent = chooseTalent;
+window.buyItem = buyItem;
+window.closeShop = closeShop;
+window.buyForge = buyForge;
+window.closeForge = closeForge;
 
 // Initialize game
 initialize();
