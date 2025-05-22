@@ -8,17 +8,34 @@ class Player {
         this.statusEffects = this.statusEffects || [];
         this.critRate = this.critRate || 0;
         this.dodgeRate = this.dodgeRate || 0;
+        this.specialUses = this.specialUses || 0;
+        this.specialCooldown = this.specialCooldown || 0;
+        this.comboPoints = this.comboPoints || 0;
+        this.attackPenaltyTurns = this.attackPenaltyTurns || 0;
+    }
+
+    startTurn() {
+        if (this.specialCooldown > 0) this.specialCooldown--;
     }
 
     attackTarget(target) {
+        this.startTurn();
         let damage = Math.max(
             1,
             this.attack - target.defense + Math.floor(Math.random() * 3)
         );
+        if (this.attackPenaltyTurns > 0) {
+            damage = Math.floor(damage / 2);
+            this.attackPenaltyTurns--;
+        }
+        let crit = false;
         if (Math.random() < (this.critRate || 0)) {
             damage = Math.floor(damage * 1.5);
+            crit = true;
         }
         target.takeDamage(damage);
+        this.comboPoints++;
+        if (crit) this.comboPoints++;
         if (this.resourceType === 'rage') {
             this.resource = Math.min(this.maxResource, this.resource + 10);
         } else if (this.resourceType === 'energie') {
@@ -28,33 +45,61 @@ class Player {
     }
 
     heal() {
+        this.startTurn();
         const cost = 20;
         if (this.resource < cost) return null;
         this.resource -= cost;
         if (this.class === 'guerrier') {
             this.shieldActive = true;
+            this.comboPoints++;
             return 'shield';
         } else if (this.class === 'voleur') {
             this.dodgeNext = true;
+            this.comboPoints++;
             return 'dodge';
         } else {
             // mage
             this.manaShieldActive = true;
+            this.comboPoints++;
             return 'manaShield';
         }
     }
 
     defend() {
+        this.startTurn();
         this.isDefending = true;
+        this.comboPoints++;
     }
 
     special(target) {
+        this.startTurn();
+        if (this.specialCooldown > 0) return null;
+        if (this.advancedClass === 'Berserker' && this.health > this.maxHealth * 0.3) {
+            return null;
+        }
         const costs = { mana: 30, energie: 20, rage: 50 };
-        const cost = costs[this.resourceType];
+        const cost = costs[this.resourceType] + this.specialUses * 10;
         if (this.resource < cost) return null;
         this.resource -= cost;
-        const damage = 15 + Math.floor(Math.random() * 5);
+        let damage = Math.floor(this.attack * 1.5) + 5;
+        damage -= Math.floor(target.defense * 0.5);
+        if (damage < 1) damage = 1;
+
+        // Combo multiplier
+        damage = Math.floor(damage * (1 + this.comboPoints / 10));
+        this.comboPoints = 0;
+
+        // Status synergy: explode poison
+        const poisonIndex = target.statusEffects.findIndex(e => e.name === 'poison');
+        if (poisonIndex !== -1) {
+            damage += 10;
+            target.statusEffects.splice(poisonIndex, 1);
+        }
+
         target.takeDamage(damage);
+        this.specialCooldown = 2;
+        this.specialUses++;
+        this.attackPenaltyTurns = 1;
         return damage;
     }
 
@@ -75,9 +120,11 @@ class Player {
     takeDamage(dmg) {
         if (this.dodgeNext) {
             this.dodgeNext = false;
+            this.comboPoints++;
             return 0;
         }
         if (Math.random() < (this.dodgeRate || 0)) {
+            this.comboPoints++;
             return 0;
         }
         if (this.shieldActive) {

@@ -51,9 +51,9 @@ assert.strictEqual(player.health, 35, 'player health after defending');
 
 player.resource = 30;
 dmg = player.special(enemy);
-assert.strictEqual(dmg, 15, 'special attack damage');
+assert.strictEqual(dmg, 24, 'special attack damage');
 assert.strictEqual(player.resource, 0, 'resource deducted after special');
-assert.strictEqual(enemy.health, 7, 'enemy health after special');
+assert.strictEqual(enemy.health, 0, 'enemy health after special');
 
 const levels = player.gainXp(15);
 assert.strictEqual(levels, 1, 'should level up once');
