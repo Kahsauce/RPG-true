@@ -602,7 +602,7 @@ function playerSpecial() {
 
     const damage = gameState.player.special(gameState.enemy);
     if (damage === null) {
-        addBattleMessage(`Pas assez de ${gameState.player.resourceType} pour l'attaque spéciale.`, 'system');
+        addBattleMessage("Impossible d'utiliser la compétence spéciale maintenant.", 'system');
         return;
     }
     
