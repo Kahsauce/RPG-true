@@ -61,6 +61,12 @@ manque.
 Dans l'inventaire, les consommables apparaissent désormais en vert tandis que
 les composants de craft sont affichés en violet pour une meilleure clarté.
 
+### Dialogues et quêtes
+
+Des PNJ proposent désormais de courtes conversations. Certaines réponses
+déclenchent des quêtes avec des récompenses en or, ajoutant un peu de contexte
+au périple.
+
 ## Licence
 
 Ce projet est distribué sous licence MIT. Voir le fichier `LICENSE` pour plus

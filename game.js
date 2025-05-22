@@ -253,10 +253,37 @@ const scenarios = [
             { text: 'Visiter le magasin', action: 'shop', next: 0 },
             { text: "Utiliser l'atelier", action: 'craft', next: 0 },
             { text: 'Se reposer (10 or)', action: 'rest', next: 0 },
+            { text: 'Discuter avec le voyageur', action: 'dialogue-voyageur', next: 0 },
             { text: 'Continuer la route', action: 'road', next: 0 }
         ]
     }
 ];
+
+const dialogues = {
+    voyageur: [
+        {
+            text: 'Salut, aventurier ! Que cherches-tu ?',
+            choices: [
+                { text: 'Des rumeurs.', next: 1 },
+                { text: 'Tu as du travail ?', next: 2 },
+                { text: 'Rien pour le moment.', end: true }
+            ]
+        },
+        {
+            text: "On raconte qu'une grotte au nord regorge de trésors... mais les monstres y pullulent.",
+            choices: [ { text: 'Merci du conseil.', end: true } ]
+        },
+        {
+            text: "Justement, pourrais-tu livrer cette lettre au village voisin ?",
+            quest: 'courrier',
+            choices: [ { text: 'Je m\'en charge.', end: true } ]
+        }
+    ]
+};
+
+const quests = {
+    courrier: { name: 'Service postal', description: 'Livrer la lettre au village voisin', reward: 30 }
+};
 
 /* --------- Chargement/Sauvegarde --------- */
 function saveGame() {
@@ -301,7 +328,9 @@ if (!gameState) {
         battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
         isPlayerTurn: true,
         scenarioStep: 0,
-        gold: 50
+        gold: 50,
+        activeQuests: [],
+        completedQuests: []
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -319,6 +348,8 @@ if (!gameState) {
     if (gameState.gold === undefined) {
         gameState.gold = 50;
     }
+    if (!gameState.activeQuests) gameState.activeQuests = [];
+    if (!gameState.completedQuests) gameState.completedQuests = [];
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
@@ -358,6 +389,9 @@ const talentButtons = document.getElementById('talent-buttons');
 const scenarioModal = document.getElementById('scenario-modal');
 const scenarioText = document.getElementById('scenario-text');
 const scenarioButtons = document.getElementById('scenario-buttons');
+const dialogueModal = document.getElementById('dialogue-modal');
+const dialogueText = document.getElementById('dialogue-text');
+const dialogueButtons = document.getElementById('dialogue-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
 const shopModal = document.getElementById('shop-modal');
 const forgeModal = document.getElementById('forge-modal');
@@ -687,6 +721,10 @@ function handleScenarioAction(action) {
         return;
     } else if (action === 'craft') {
         showCraft();
+        return;
+    } else if (action.startsWith('dialogue-')) {
+        const id = action.split('-')[1];
+        startDialogue(id);
         return;
     } else if (action === 'rest') {
         const price = 10;
@@ -1190,6 +1228,54 @@ function spawnNewEnemy() {
     saveGame();
 }
 
+function startQuest(id) {
+    if (!gameState.activeQuests.includes(id)) {
+        gameState.activeQuests.push(id);
+        addBattleMessage(`Nouvelle quête : ${quests[id].name}`, 'system');
+    }
+    saveGame();
+}
+
+function completeQuest(id) {
+    const idx = gameState.activeQuests.indexOf(id);
+    if (idx !== -1) {
+        gameState.activeQuests.splice(idx, 1);
+        gameState.completedQuests.push(id);
+        gameState.gold += quests[id].reward;
+        addBattleMessage(`Quête terminée : ${quests[id].name} (+${quests[id].reward} or)`, 'system');
+        updateHealthBars();
+        saveGame();
+    }
+}
+
+function startDialogue(id, step = 0) {
+    gameState.currentDialogue = { id, step };
+    showDialogueStep();
+}
+
+function showDialogueStep() {
+    const d = dialogues[gameState.currentDialogue.id][gameState.currentDialogue.step];
+    dialogueText.textContent = d.text;
+    dialogueButtons.innerHTML = '';
+    d.choices.forEach(c => {
+        const b = document.createElement('button');
+        b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
+        b.textContent = c.text;
+        b.onclick = () => {
+            if (d.quest) startQuest(d.quest);
+            if (c.end) {
+                dialogueModal.classList.add('hidden');
+                spawnNewEnemy();
+            } else {
+                gameState.currentDialogue.step = c.next;
+                showDialogueStep();
+            }
+        };
+        dialogueButtons.appendChild(b);
+    });
+    dialogueModal.classList.remove('hidden');
+}
+
 // Expose actions globally for HTML onclick handlers
 window.playerAttack = playerAttack;
 window.playerAbility = playerAbility;
@@ -1205,6 +1291,7 @@ window.closeForge = closeForge;
 window.craftItem = craftItem;
 window.closeCraft = closeCraft;
 window.equipItem = equipItem;
+window.startDialogue = startDialogue;
 
 // Initialize game
 initialize();
