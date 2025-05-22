@@ -1,5 +1,6 @@
 /* --------- Données de base --------- */
-const DIFFICULTY_MULTIPLIER = 1.2;
+// Réduction de la difficulté globale de 5%
+const DIFFICULTY_MULTIPLIER = 1.14;
 const classes = {
     guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
     mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
@@ -577,8 +578,11 @@ function renderCraftOptions() {
     craftButtons.innerHTML = '';
     Object.entries(craftRecipes).forEach(([key, r]) => {
         const b = document.createElement('button');
-        b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
-        b.textContent = r.name;
+        b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800 text-left';
+        const list = Object.entries(r.ingredients)
+            .map(([ing, qty]) => `${ingredientsData[ing].name} x${qty}`)
+            .join(', ');
+        b.innerHTML = `<div>${r.name}</div><div class="text-xs text-blue-200">${list}</div>`;
         b.onclick = () => craftItem(key);
         craftButtons.appendChild(b);
     });

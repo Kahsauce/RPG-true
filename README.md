@@ -45,6 +45,11 @@ statistiques lors d'un passage de niveau sont indiqués dans le journal de
 combat. La génération d'énergie du voleur a également été augmentée pour rendre
 ses compétences plus faciles à utiliser.
 
+### Système de craft
+
+L'atelier affiche maintenant la liste des ingrédients nécessaires à la
+fabrication de chaque objet afin de planifier plus facilement vos récoltes.
+
 ## Licence
 
 Ce projet est distribué sous licence MIT. Voir le fichier `LICENSE` pour plus
