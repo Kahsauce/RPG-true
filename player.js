@@ -64,8 +64,9 @@ class Player {
             this.comboPoints++;
             return 'dodge';
         } else if (this.class === 'mage') {
-            const heal = 15;
+            const heal = 20;
             this.health = Math.min(this.maxHealth, this.health + heal);
+            this.manaShieldActive = true;
             this.comboPoints++;
             return 'heal';
         } else {
@@ -101,8 +102,8 @@ class Player {
             if (this.resource < cost) return null;
             this.resource -= cost;
             if (this.class === 'mage') {
-                damage = Math.floor(this.attack * 1.5) + 5;
-                target.statusEffects.push({ name: 'brulure', duration: 3, value: 3 });
+                damage = Math.floor(this.attack * 1.8) + 5;
+                target.statusEffects.push({ name: 'brulure', duration: 3, value: 4 });
             } else if (this.class === 'voleur') {
                 damage = Math.floor(this.attack * 0.5) * 3;
                 this.dodgeNext = true;

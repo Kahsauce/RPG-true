@@ -39,20 +39,20 @@ player.resource = 50;
 let skill = player.useAbility();
 assert.strictEqual(skill, 'heal', 'ability now heals');
 assert.strictEqual(player.resource, 35, 'resource used to heal');
-assert.strictEqual(player.health, 45, 'health increased by ability');
+assert.strictEqual(player.health, 50, 'health increased by ability');
 let damageTaken = player.takeDamage(10);
-assert.strictEqual(damageTaken, 10, 'damage taken normally');
-assert.strictEqual(player.health, 35, 'health after taking damage');
-assert.strictEqual(player.resource, 35, 'mana not regenerated on damage');
+assert.strictEqual(damageTaken, 0, 'damage absorbed by mana shield');
+assert.strictEqual(player.health, 50, 'health after taking damage');
+assert.strictEqual(player.resource, 25, 'mana spent to absorb damage');
 
 player.defend();
 damageTaken = player.takeDamage(10);
 assert.strictEqual(damageTaken, 5, 'damage should be halved when defending');
-assert.strictEqual(player.health, 30, 'player health after defending');
+assert.strictEqual(player.health, 45, 'player health after defending');
 
 player.resource = 30;
 dmg = player.special(enemy);
-assert.strictEqual(dmg, 24, 'special attack damage');
+assert.strictEqual(dmg, 28, 'special attack damage');
 assert.strictEqual(player.resource, 5, 'resource deducted after special');
 assert.strictEqual(enemy.health, 0, 'enemy health after special');
 

@@ -44,6 +44,12 @@
             object-fit: cover;
         }
 
+        #location-name {
+            margin-top: 0.25rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
         .enemy-img {
             width: 8rem;
             height: 8rem;
