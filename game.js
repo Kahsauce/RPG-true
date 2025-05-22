@@ -7,6 +7,11 @@ function enemyPlaceholder(name) {
     return 'data:image/svg+xml;base64,' + btoa(svg);
 }
 
+function locationPlaceholder(name) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect width='100%' height='100%' fill='#333'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='24'>${name}</text></svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(svg);
+}
+
 function formatBonus(bonus) {
     const map = { attack: 'ATK', defense: 'DEF', maxHealth: 'PV', maxResource: 'RES', critRate: 'Crit', dodgeRate: 'Esq' };
     return Object.entries(bonus).map(([k,v]) => {
@@ -113,15 +118,15 @@ const enemiesList = [
     { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: enemyPlaceholder('Ombre'), preferredTime: 'night' },
     { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: enemyPlaceholder('Spectre'), preferredTime: 'night' },
     { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: enemyPlaceholder('Serpent'), preferredTime: 'day' },
-    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: enemyPlaceholder('Gardien'), location: "https://via.placeholder.com/400x200?text=Ruines", requiredQuest: "artefact", requiredStep: 1 },
+    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: enemyPlaceholder('Gardien'), location: locationPlaceholder('Ruines'), requiredQuest: "artefact", requiredStep: 1 },
     { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: enemyPlaceholder('Spectre'), unlockQuest: "artefact", preferredTime: 'night' }
 ];
 
 const locations = [
-    { name: 'Forêt enchantée', img: 'https://via.placeholder.com/400x200?text=Foret' },
-    { name: 'Caverne sombre', img: 'https://via.placeholder.com/400x200?text=Caverne' },
-    { name: 'Désert aride', img: 'https://via.placeholder.com/400x200?text=Desert' },
-    { name: 'Château en ruines', img: 'https://via.placeholder.com/400x200?text=Chateau' }
+    { name: 'Forêt enchantée', img: locationPlaceholder('Forêt') },
+    { name: 'Caverne sombre', img: locationPlaceholder('Caverne') },
+    { name: 'Désert aride', img: locationPlaceholder('Désert') },
+    { name: 'Château en ruines', img: locationPlaceholder('Château') }
 ];
 
 // Ingrédients récoltables pour le futur craft
@@ -963,14 +968,14 @@ function showScenario(step) {
     }
     scenarioText.textContent = sc.text;
     if (roadBonusDisplay) {
-        roadBonusDisplay.textContent = `Bonus de route actuel : +${gameState.roadStreak}`;
+        roadBonusDisplay.textContent = `Bonus d'attaque actuel : +${gameState.roadStreak} ATK`;
     }
     scenarioButtons.innerHTML = '';
     sc.choices.forEach(c => {
         const btn = document.createElement('button');
         btn.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
         if (c.action === 'road' || c.action === 'road-return') {
-            btn.textContent = `${c.text} (+${gameState.roadStreak + 1})`;
+            btn.textContent = `${c.text} (+${gameState.roadStreak + 1} ATK)`;
         } else {
             btn.textContent = c.text;
         }
