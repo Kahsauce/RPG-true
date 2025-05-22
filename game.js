@@ -563,7 +563,7 @@ function initialize() {
     } else {
         updateHealthBars();
         renderInventory();
-        renderQuests();
+        updateQuestPanel();
         if (enemyImage && gameState.enemy && gameState.enemy.img) {
             enemyImage.src = gameState.enemy.img;
         }
@@ -602,7 +602,7 @@ function selectClass(cl) {
     addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
     updateHealthBars();
     renderInventory();
-    renderQuests();
+    updateQuestPanel();
     saveGame();
 }
 
@@ -992,16 +992,36 @@ function renderQuests() {
     if (!activeQuestList || !completedQuestList) return;
     activeQuestList.innerHTML = '';
     completedQuestList.innerHTML = '';
-    gameState.activeQuests.forEach(id => {
+
+    if (gameState.activeQuests.length === 0) {
         const li = document.createElement('li');
-        li.textContent = `${quests[id].name} - ${quests[id].description}`;
+        li.textContent = 'Aucune quête en cours';
+        li.className = 'text-gray-400';
         activeQuestList.appendChild(li);
-    });
-    gameState.completedQuests.forEach(id => {
+    } else {
+        gameState.activeQuests.forEach(id => {
+            const li = document.createElement('li');
+            li.textContent = `${quests[id].name} - ${quests[id].description}`;
+            activeQuestList.appendChild(li);
+        });
+    }
+
+    if (gameState.completedQuests.length === 0) {
         const li = document.createElement('li');
-        li.textContent = quests[id].name;
+        li.textContent = 'Aucune quête terminée';
+        li.className = 'text-gray-400';
         completedQuestList.appendChild(li);
-    });
+    } else {
+        gameState.completedQuests.forEach(id => {
+            const li = document.createElement('li');
+            li.textContent = quests[id].name;
+            completedQuestList.appendChild(li);
+        });
+    }
+}
+
+function updateQuestPanel() {
+    renderQuests();
 }
 
 function useItem(item) {
@@ -1299,7 +1319,7 @@ function startQuest(id) {
         gameState.activeQuests.push(id);
         addBattleMessage(`Nouvelle quête : ${quests[id].name}`, 'system');
     }
-    renderQuests();
+    updateQuestPanel();
     saveGame();
 }
 
@@ -1311,7 +1331,7 @@ function completeQuest(id) {
         gameState.gold += quests[id].reward;
         addBattleMessage(`Quête terminée : ${quests[id].name} (+${quests[id].reward} or)`, 'system');
         updateHealthBars();
-        renderQuests();
+        updateQuestPanel();
         saveGame();
     }
 }
