@@ -773,15 +773,34 @@ function playerDefend() {
     setTimeout(enemyTurn, 1500);
 }
 
+function getSpecialRestriction(player) {
+    if (player.specialCooldown > 0) {
+        return 'Compétence spéciale en récupération.';
+    }
+    if (player.advancedClass === 'Berserker' && player.health > player.maxHealth * 0.3) {
+        return 'Le berserker doit être blessé pour utiliser cette compétence.';
+    }
+    const baseCosts = { mana: 30, energie: 20, rage: 50 };
+    let cost = baseCosts[player.resourceType] + player.specialUses * 10;
+    if (player.class === 'guerrier') {
+        if (player.resource <= 0) return 'Pas assez de rage.';
+    } else {
+        if (player.resource < cost) return `Pas assez de ${player.resourceType}.`;
+    }
+    return null;
+}
+
 function playerSpecial() {
     if (!gameState.isPlayerTurn) return;
     processStatusEffects();
 
-    const damage = gameState.player.special(gameState.enemy);
-    if (damage === null) {
-        addBattleMessage("Impossible d'utiliser la compétence spéciale maintenant.", 'system');
+    const reason = getSpecialRestriction(gameState.player);
+    if (reason) {
+        addBattleMessage(reason, 'system');
         return;
     }
+
+    const damage = gameState.player.special(gameState.enemy);
     
     // Animation
     enemyCharacter.classList.add('damage-animation');
