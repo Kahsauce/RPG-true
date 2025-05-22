@@ -195,6 +195,8 @@
     <div id="shop-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
         <div class="bg-gray-800 p-6 rounded-xl space-y-4">
             <h2 class="text-lg font-bold mb-2">Magasin</h2>
+            <div class="text-yellow-300 text-sm">Or: <span id="shop-gold-text">0</span></div>
+            <div id="shop-message" class="text-blue-200 text-sm"></div>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyItem('potion')">Potion (20 or)</button>
                 <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyItem('megaPotion')">Méga potion (50 or)</button>
@@ -207,6 +209,8 @@
     <div id="forge-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
         <div class="bg-gray-800 p-6 rounded-xl space-y-4">
             <h2 class="text-lg font-bold mb-2">Forge</h2>
+            <div class="text-yellow-300 text-sm">Or: <span id="forge-gold-text">0</span></div>
+            <div id="forge-message" class="text-blue-200 text-sm"></div>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyForge('weapon')">Arme (+3 ATK, 50 or)</button>
                 <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyForge('armor')">Armure (+3 DEF, 50 or)</button>
