@@ -573,6 +573,7 @@ const playerIcon = document.getElementById('player-icon');
 const enemyCharacter = document.getElementById('enemy-character');
 const enemyImage = document.getElementById('enemy-image');
 const locationImage = document.getElementById('location-image');
+const locationName = document.getElementById('location-name');
 const playerName = document.getElementById('player-name');
 const playerLevelText = document.getElementById('player-level');
 const playerHpText = document.getElementById('player-hp-text');
@@ -813,6 +814,7 @@ function initialize() {
         if (locationImage) {
             const loc = locations[Math.floor(Math.random() * locations.length)];
             locationImage.src = loc.img;
+            if (locationName) locationName.textContent = loc.name;
         }
         startAmbientMusic();
     }
@@ -1661,6 +1663,7 @@ function spawnNewEnemy() {
             locObj = locations[Math.floor(Math.random() * locations.length)];
             locationImage.src = locObj.img;
         }
+        if (locationName && locObj) locationName.textContent = locObj.name;
         if (gameState.activeQuests.includes('explorationDesert') && locObj && locObj.name.includes('Désert')) {
             completeQuest('explorationDesert');
         }
