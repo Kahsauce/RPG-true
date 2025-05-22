@@ -13,10 +13,14 @@ class Player {
         this.comboPoints = this.comboPoints || 0;
         this.attackPenaltyTurns = this.attackPenaltyTurns || 0;
         this.tempCritBonus = this.tempCritBonus || 0;
+        this.advancedEffect = this.advancedEffect || null;
     }
 
     startTurn() {
         if (this.specialCooldown > 0) this.specialCooldown--;
+        if (this.resourceType === 'mana') {
+            this.resource = Math.min(this.maxResource, this.resource + 5);
+        }
     }
 
     attackTarget(target) {
@@ -39,15 +43,13 @@ class Player {
         target.takeDamage(damage);
         this.comboPoints++;
         if (crit) this.comboPoints++;
-        if (this.resourceType === 'rage') {
-            this.resource = Math.min(this.maxResource, this.resource + 10);
-        } else if (this.resourceType === 'energie') {
+        if (this.resourceType === 'energie') {
             this.resource = Math.min(this.maxResource, this.resource + 5);
         }
         return damage;
     }
 
-    heal() {
+    useAbility() {
         this.startTurn();
         const cost = 20;
         if (this.resource < cost) return null;
@@ -60,11 +62,17 @@ class Player {
             this.dodgeNext = true;
             this.comboPoints++;
             return 'dodge';
-        } else {
-            // mage
-            this.manaShieldActive = true;
+        } else if (this.class === 'mage') {
+            const heal = 15;
+            this.health = Math.min(this.maxHealth, this.health + heal);
             this.comboPoints++;
-            return 'manaShield';
+            return 'heal';
+        } else {
+            // rodeur
+            const heal = 10;
+            this.health = Math.min(this.maxHealth, this.health + heal);
+            this.comboPoints++;
+            return 'heal';
         }
     }
 
@@ -81,12 +89,31 @@ class Player {
             return null;
         }
         const costs = { mana: 30, energie: 20, rage: 50 };
-        const cost = costs[this.resourceType] + this.specialUses * 10;
-        if (this.resource < cost) return null;
-        this.resource -= cost;
-        let damage = Math.floor(this.attack * 1.5) + 5;
-        damage -= Math.floor(target.defense * 0.5);
-        if (damage < 1) damage = 1;
+        let cost = costs[this.resourceType] + this.specialUses * 10;
+        let damage = 0;
+        if (this.class === 'guerrier') {
+            if (this.resource <= 0) return null;
+            damage = this.attack + this.resource;
+            this.resource = 0;
+            cost = 0;
+        } else {
+            if (this.resource < cost) return null;
+            this.resource -= cost;
+            if (this.class === 'mage') {
+                damage = Math.floor(this.attack * 1.5) + 5;
+                target.statusEffects.push({ name: 'brulure', duration: 3, value: 3 });
+            } else if (this.class === 'voleur') {
+                damage = Math.floor(this.attack * 0.5) * 3;
+                this.dodgeNext = true;
+            } else if (this.class === 'rodeur') {
+                damage = Math.floor(this.attack * 1.2);
+                target.statusEffects.push({ name: 'ralentissement', duration: 2, value: 2 });
+            } else {
+                damage = Math.floor(this.attack * 1.5) + 5;
+            }
+            damage -= Math.floor(target.defense * 0.5);
+            if (damage < 1) damage = 1;
+        }
 
         // Combo multiplier
         damage = Math.floor(damage * (1 + this.comboPoints / 10));
@@ -110,6 +137,14 @@ class Player {
         }
         if (this.talents && this.talents.includes('Canalisation rapide')) {
             this.resource = Math.min(this.maxResource, this.resource + 15);
+        }
+
+        if (this.advancedEffect === 'specialCrit' && this.class === 'rodeur') {
+            if (Math.random() < 0.25) damage = Math.floor(damage * 1.5);
+        }
+
+        if (this.advancedEffect === 'fury' && this.health < this.maxHealth / 2) {
+            damage = Math.floor(damage * 1.2);
         }
 
         this.specialCooldown = 2;
@@ -136,10 +171,16 @@ class Player {
         if (this.dodgeNext) {
             this.dodgeNext = false;
             this.comboPoints++;
+            if (this.resourceType === 'energie') {
+                this.resource = Math.min(this.maxResource, this.resource + 5);
+            }
             return 0;
         }
         if (Math.random() < (this.dodgeRate || 0)) {
             this.comboPoints++;
+            if (this.resourceType === 'energie') {
+                this.resource = Math.min(this.maxResource, this.resource + 5);
+            }
             return 0;
         }
         if (this.shieldActive) {
@@ -157,11 +198,10 @@ class Player {
             this.isDefending = false;
         }
         this.health -= dmg;
-        const regen = { mana: 5, energie: 5 };
         if (this.resourceType === 'rage') {
+            this.resource = Math.min(this.maxResource, this.resource + 15);
+        } else if (this.resourceType === 'energie' && dmg === 0) {
             this.resource = Math.min(this.maxResource, this.resource + 5);
-        } else if (regen[this.resourceType]) {
-            this.resource = Math.min(this.maxResource, this.resource + regen[this.resourceType]);
         }
         if (this.health < 0) this.health = 0;
         return dmg;
