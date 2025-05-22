@@ -1,6 +1,10 @@
 # RPG-true
 
 Ce projet contient un prototype de RPG textuel minimaliste en français.
+## Configuration initiale
+
+Avant que l'accès réseau ne soit désactivé dans Codex, exécutez `npm run setup` pour installer toutes les dépendances nécessaires (par exemple **jsdom** pour les tests). Ce script se trouve dans `scripts/setupDependencies.sh`.
+
 
 ## Utilisation
 
