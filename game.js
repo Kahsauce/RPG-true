@@ -423,7 +423,8 @@ if (!gameState) {
         questProgress: {},
         bestiary: {},
         timeOfDay: 0,
-        dialogueHistory: []
+        dialogueHistory: [],
+        roadStreak: 0
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -447,6 +448,7 @@ if (!gameState) {
     if (!gameState.bestiary) gameState.bestiary = {};
     if (gameState.timeOfDay === undefined) gameState.timeOfDay = 0;
     if (!gameState.dialogueHistory) gameState.dialogueHistory = [];
+    if (gameState.roadStreak === undefined) gameState.roadStreak = 0;
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
@@ -509,28 +511,55 @@ const questDetailDesc = document.getElementById('quest-detail-desc');
 const questDetailSteps = document.getElementById('quest-detail-steps');
 const questDetailNpc = document.getElementById('quest-detail-npc');
 const questDetailDialogues = document.getElementById('quest-detail-dialogues');
+const roadBonusDisplay = document.getElementById('road-bonus-display');
+const musicToggle = document.getElementById('music-toggle');
+const sfxToggle = document.getElementById('sfx-toggle');
+
+let musicEnabled = true;
+let sfxEnabled = true;
+
+if (musicToggle) {
+    musicToggle.addEventListener('change', () => {
+        musicEnabled = musicToggle.checked;
+        if (musicEnabled) startAmbientMusic(); else stopAmbientMusic();
+    });
+}
+
+if (sfxToggle) {
+    sfxToggle.addEventListener('change', () => {
+        sfxEnabled = sfxToggle.checked;
+    });
+}
 
 let audioCtx = null;
 let ambientNodes = null;
 
 function startAmbientMusic() {
+    if (!musicEnabled) return;
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (ambientNodes) return;
         const osc1 = audioCtx.createOscillator();
         const osc2 = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+        const notes = [261.63, 329.63, 392.0];
+        let idx = 0;
         osc1.type = 'sine';
         osc2.type = 'sine';
-        osc1.frequency.value = 110;
-        osc2.frequency.value = 220;
+        osc1.frequency.value = notes[0];
+        osc2.frequency.value = notes[1];
+        const interval = setInterval(() => {
+            idx = (idx + 1) % notes.length;
+            osc1.frequency.setValueAtTime(notes[idx], audioCtx.currentTime);
+            osc2.frequency.setValueAtTime(notes[(idx + 1) % notes.length], audioCtx.currentTime);
+        }, 1000);
         osc1.connect(gain);
         osc2.connect(gain);
         gain.connect(audioCtx.destination);
         gain.gain.value = 0.05;
         osc1.start();
         osc2.start();
-        ambientNodes = { osc1, osc2, gain };
+        ambientNodes = { osc1, osc2, gain, interval };
     } catch (e) {}
 }
 
@@ -539,12 +568,14 @@ function stopAmbientMusic() {
         try {
             ambientNodes.osc1.stop();
             ambientNodes.osc2.stop();
+            clearInterval(ambientNodes.interval);
         } catch (e) {}
         ambientNodes = null;
     }
 }
 
 function playSound(type) {
+    if (!sfxEnabled) return;
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
@@ -587,7 +618,7 @@ function updateHealthBars() {
     if (enemyImage && gameState.enemy.img) {
         enemyImage.src = gameState.enemy.img;
     }
-    playerAttackText.textContent = gameState.player.attack;
+    playerAttackText.textContent = gameState.player.attack + (gameState.player.roadBonus || 0);
     playerDefenseText.textContent = gameState.player.defense;
     if (playerCritText) {
         playerCritText.textContent = `${Math.round(gameState.player.critRate * 100)}%`;
@@ -674,6 +705,7 @@ function initialize() {
             const loc = locations[Math.floor(Math.random() * locations.length)];
             locationImage.src = loc.img;
         }
+        startAmbientMusic();
     }
 }
 
@@ -819,11 +851,18 @@ function showScenario(step) {
         return;
     }
     scenarioText.textContent = sc.text;
+    if (roadBonusDisplay) {
+        roadBonusDisplay.textContent = `Bonus de route actuel : +${gameState.roadStreak}`;
+    }
     scenarioButtons.innerHTML = '';
     sc.choices.forEach(c => {
         const btn = document.createElement('button');
         btn.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
-        btn.textContent = c.text;
+        if (c.action === 'road' || c.action === 'road-return') {
+            btn.textContent = `${c.text} (+${gameState.roadStreak + 1})`;
+        } else {
+            btn.textContent = c.text;
+        }
         btn.onclick = () => {
             scenarioModal.classList.add('hidden');
             handleScenarioAction(c.action);
@@ -836,6 +875,13 @@ function showScenario(step) {
 }
 
 function handleScenarioAction(action) {
+    if (action === 'road' || action === 'road-return') {
+        gameState.roadStreak++;
+        if (gameState.player) gameState.player.roadBonus = gameState.roadStreak;
+    } else {
+        gameState.roadStreak = 0;
+        if (gameState.player) gameState.player.roadBonus = 0;
+    }
     if (action === 'forge') {
         if (!gameState.activeQuests.includes('forge') && !gameState.completedQuests.includes('forge')) {
             startQuest('forge');

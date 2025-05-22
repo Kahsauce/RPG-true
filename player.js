@@ -14,6 +14,7 @@ class Player {
         this.attackPenaltyTurns = this.attackPenaltyTurns || 0;
         this.tempCritBonus = this.tempCritBonus || 0;
         this.advancedEffect = this.advancedEffect || null;
+        this.roadBonus = this.roadBonus || 0;
     }
 
     startTurn() {
@@ -27,7 +28,7 @@ class Player {
         this.startTurn();
         let damage = Math.max(
             1,
-            this.attack - target.defense + Math.floor(Math.random() * 3)
+            this.attack + (this.roadBonus || 0) - target.defense + Math.floor(Math.random() * 3)
         );
         if (this.attackPenaltyTurns > 0) {
             damage = Math.floor(damage / 2);
