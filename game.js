@@ -92,14 +92,14 @@ Object.values(equipmentData).forEach(cls => {
 });
 
 const enemiesList = [
-    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: "https://via.placeholder.com/128?text=Loup" },
+    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: "https://via.placeholder.com/128?text=Loup", preferredTime: 'night' },
     { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: "https://via.placeholder.com/128?text=Golem" },
-    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: "https://via.placeholder.com/128?text=Esprit" },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: "https://via.placeholder.com/128?text=Ombre" },
-    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: "https://via.placeholder.com/128?text=Spectre" },
-    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: "https://via.placeholder.com/128?text=Serpent" }
+    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: "https://via.placeholder.com/128?text=Esprit", preferredTime: 'night' },
+    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: "https://via.placeholder.com/128?text=Ombre", preferredTime: 'night' },
+    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: "https://via.placeholder.com/128?text=Spectre", preferredTime: 'night' },
+    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: "https://via.placeholder.com/128?text=Serpent", preferredTime: 'day' },
     { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: "https://via.placeholder.com/128?text=Gardien", location: "https://via.placeholder.com/400x200?text=Ruines", requiredQuest: "artefact", requiredStep: 1 },
-    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: "https://via.placeholder.com/128?text=Spectre2", unlockQuest: "artefact" }
+    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: "https://via.placeholder.com/128?text=Spectre2", unlockQuest: "artefact", preferredTime: 'night' }
 ];
 
 const locations = [
@@ -328,10 +328,50 @@ const dialogues = {
 };
 
 const quests = {
-    artefact: { name: 'Artefact ancien', description: "Retrouver l'orbe des ruines pour le sage", reward: 80 },
-    courrier: { name: 'Service postal', description: 'Livrer la lettre au village voisin', reward: 30 },
-    herbes: { name: 'Herboriste', description: "Apporter 3 herbes à l'herboriste", reward: 40 },
-    forge: { name: 'Premier équipement', description: 'Améliorer votre arme ou votre armure', reward: 50 }
+    artefact: {
+        name: 'Artefact ancien',
+        description: "Retrouver l'orbe des ruines pour le sage",
+        reward: 80,
+        npc: 'sage',
+        steps: [
+            'Accepter la quête auprès du sage',
+            'Vaincre le Gardien antique',
+            "Rapporter l'orbe"
+        ]
+    },
+    courrier: {
+        name: 'Service postal',
+        description: 'Livrer la lettre au village voisin',
+        reward: 30,
+        npc: 'voyageur',
+        steps: [
+            'Prendre la lettre',
+            'Aller au village',
+            'Remettre la lettre'
+        ]
+    },
+    herbes: {
+        name: 'Herboriste',
+        description: "Apporter 3 herbes à l'herboriste",
+        reward: 40,
+        npc: 'herboriste',
+        steps: [
+            'Récolter les herbes',
+            'Apporter les herbes',
+            'Recevoir la récompense'
+        ]
+    },
+    forge: {
+        name: 'Premier équipement',
+        description: 'Améliorer votre arme ou votre armure',
+        reward: 50,
+        npc: 'forgeron',
+        steps: [
+            'Gagner de l\'or',
+            'Aller à la forge',
+            'Acheter une amélioration'
+        ]
+    }
 };
 
 /* --------- Chargement/Sauvegarde --------- */
@@ -380,7 +420,10 @@ if (!gameState) {
         gold: 50,
         activeQuests: [],
         completedQuests: [],
-        questProgress: {}
+        questProgress: {},
+        bestiary: {},
+        timeOfDay: 0,
+        dialogueHistory: []
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -401,6 +444,9 @@ if (!gameState) {
     if (!gameState.activeQuests) gameState.activeQuests = [];
     if (!gameState.completedQuests) gameState.completedQuests = [];
     if (!gameState.questProgress) gameState.questProgress = {};
+    if (!gameState.bestiary) gameState.bestiary = {};
+    if (gameState.timeOfDay === undefined) gameState.timeOfDay = 0;
+    if (!gameState.dialogueHistory) gameState.dialogueHistory = [];
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
@@ -455,6 +501,14 @@ const craftButtons = document.getElementById('craft-buttons');
 const craftMessage = document.getElementById('craft-message');
 const activeQuestList = document.getElementById('active-quests');
 const completedQuestList = document.getElementById('completed-quests');
+const bestiaryList = document.getElementById('bestiary-list');
+const timeDisplay = document.getElementById('time-display');
+const questDetailModal = document.getElementById('quest-detail-modal');
+const questDetailName = document.getElementById('quest-detail-name');
+const questDetailDesc = document.getElementById('quest-detail-desc');
+const questDetailSteps = document.getElementById('quest-detail-steps');
+const questDetailNpc = document.getElementById('quest-detail-npc');
+const questDetailDialogues = document.getElementById('quest-detail-dialogues');
 
 let audioCtx = null;
 let ambientNodes = null;
@@ -558,6 +612,19 @@ function updateHealthBars() {
     resourceIcon.className = `fas ${icons[gameState.player.resourceType]} text-purple-400 mr-1`;
 }
 
+function updateTimeDisplay() {
+    if (!timeDisplay) return;
+    const label = gameState.timeOfDay < 0.5 ? 'Jour' : 'Nuit';
+    timeDisplay.textContent = label;
+}
+
+function advanceTime() {
+    gameState.timeOfDay += 0.25;
+    if (gameState.timeOfDay >= 1) gameState.timeOfDay = 0;
+    updateTimeDisplay();
+    saveGame();
+}
+
 function processStatusEffects() {
     const messages = [
         ...gameState.player.applyStatusEffects(),
@@ -599,6 +666,7 @@ function initialize() {
         updateHealthBars();
         renderInventory();
         updateQuestPanel();
+        updateTimeDisplay();
         if (enemyImage && gameState.enemy && gameState.enemy.img) {
             enemyImage.src = gameState.enemy.img;
         }
@@ -1053,6 +1121,8 @@ function renderQuests() {
         gameState.activeQuests.forEach(id => {
             const li = document.createElement('li');
             li.textContent = `${quests[id].name} - ${quests[id].description}`;
+            li.className = 'cursor-pointer hover:text-blue-300';
+            li.onclick = () => showQuestDetail(id);
             activeQuestList.appendChild(li);
         });
     }
@@ -1066,13 +1136,35 @@ function renderQuests() {
         gameState.completedQuests.forEach(id => {
             const li = document.createElement('li');
             li.textContent = quests[id].name;
+            li.className = 'cursor-pointer hover:text-blue-300';
+            li.onclick = () => showQuestDetail(id);
             completedQuestList.appendChild(li);
         });
     }
 }
 
+function renderBestiary() {
+    if (!bestiaryList) return;
+    bestiaryList.innerHTML = '';
+    const names = Object.keys(gameState.bestiary);
+    if (names.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Aucune entrée';
+        li.className = 'text-gray-400';
+        bestiaryList.appendChild(li);
+        return;
+    }
+    names.forEach(name => {
+        const info = gameState.bestiary[name];
+        const li = document.createElement('li');
+        li.textContent = `${name} (Niv. ${info.level}) ATK ${info.attackRange[0]}-${info.attackRange[1]} DEF ${info.defense}`;
+        bestiaryList.appendChild(li);
+    });
+}
+
 function updateQuestPanel() {
     renderQuests();
+    renderBestiary();
 }
 
 function useItem(item) {
@@ -1339,6 +1431,15 @@ function enemyDefeated() {
     }
     if (ingredientsLooted.length) renderInventory();
 
+    // Mise à jour du bestiaire
+    gameState.bestiary[gameState.enemy.name] = {
+        level: gameState.enemy.level,
+        attackRange: gameState.enemy.attackRange,
+        defense: gameState.enemy.defense
+    };
+
+    renderBestiary();
+
     updateHealthBars();
     saveGame();
 
@@ -1347,6 +1448,7 @@ function enemyDefeated() {
 
 // Spawn new enemy
 function spawnNewEnemy() {
+    advanceTime();
     let available = enemiesList.filter(e => {
         if (e.requiredQuest) {
             const step = gameState.questProgress && gameState.questProgress[e.requiredQuest];
@@ -1362,7 +1464,13 @@ function spawnNewEnemy() {
     if (available.length === 0) {
         available = enemiesList.filter(e => !e.requiredQuest && !e.unlockQuest);
     }
-    const base = { ...available[Math.floor(Math.random() * available.length)] };
+    let weighted = [];
+    available.forEach(e => {
+        weighted.push(e);
+        if (e.preferredTime === 'night' && gameState.timeOfDay >= 0.5) weighted.push(e);
+        if (e.preferredTime === 'day' && gameState.timeOfDay < 0.5) weighted.push(e);
+    });
+    const base = { ...weighted[Math.floor(Math.random() * weighted.length)] };
     const levelBoost = Math.floor(Math.random() * 3);
     base.level = gameState.player.level + levelBoost;
     base.maxHealth += gameState.player.level * 5 + levelBoost * 10;
@@ -1373,6 +1481,9 @@ function spawnNewEnemy() {
         Math.floor((base.attackRange[1] + levelBoost * 2) * DIFFICULTY_MULTIPLIER)
     ];
     base.defense += Math.floor(gameState.player.level / 2);
+    if (gameState.timeOfDay >= 0.5 && base.preferredTime === 'night') {
+        base.attackRange = base.attackRange.map(v => Math.floor(v * 1.1));
+    }
     base.statusEffects = [];
     gameState.enemy = new Enemy(base);
     if (enemyImage) enemyImage.src = base.img || '';
@@ -1424,6 +1535,9 @@ function startDialogue(id, step = 0) {
 function showDialogueStep() {
     const d = dialogues[gameState.currentDialogue.id][gameState.currentDialogue.step];
     dialogueText.textContent = d.text;
+    if (d.quest) {
+        gameState.dialogueHistory.push({ quest: d.quest, text: d.text });
+    }
     dialogueButtons.innerHTML = '';
     d.choices.forEach(c => {
         const b = document.createElement('button');
@@ -1448,6 +1562,33 @@ function showDialogueStep() {
     dialogueModal.classList.remove('hidden');
 }
 
+function showQuestDetail(id) {
+    const q = quests[id];
+    if (!q) return;
+    questDetailName.textContent = q.name;
+    questDetailDesc.textContent = q.description + ` (Récompense: ${q.reward} or)`;
+    questDetailSteps.innerHTML = '';
+    q.steps.forEach((s, idx) => {
+        const li = document.createElement('li');
+        const done = (gameState.completedQuests.includes(id)) || (gameState.questProgress[id] || 0) > idx;
+        li.textContent = s;
+        if (done) li.className = 'text-green-300';
+        questDetailSteps.appendChild(li);
+    });
+    questDetailNpc.textContent = `PNJ: ${q.npc}`;
+    questDetailDialogues.innerHTML = '';
+    gameState.dialogueHistory.filter(d => d.quest === id).forEach(d => {
+        const div = document.createElement('div');
+        div.textContent = d.text;
+        questDetailDialogues.appendChild(div);
+    });
+    questDetailModal.classList.remove('hidden');
+}
+
+function closeQuestDetail() {
+    questDetailModal.classList.add('hidden');
+}
+
 // Expose actions globally for HTML onclick handlers
 window.playerAttack = playerAttack;
 window.playerAbility = playerAbility;
@@ -1464,6 +1605,8 @@ window.craftItem = craftItem;
 window.closeCraft = closeCraft;
 window.equipItem = equipItem;
 window.startDialogue = startDialogue;
+window.showQuestDetail = showQuestDetail;
+window.closeQuestDetail = closeQuestDetail;
 
 // Initialize game
 initialize();

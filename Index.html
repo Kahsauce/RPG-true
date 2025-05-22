@@ -37,6 +37,7 @@
                         <span id="gold-display" class="px-3 py-1 bg-yellow-900/50 rounded-full text-sm flex items-center">
                             <i class="fas fa-coins text-yellow-400 mr-1"></i> <span id="gold-text">0</span> Or
                         </span>
+                        <span id="time-display" class="px-3 py-1 bg-blue-900/50 rounded-full text-sm">Jour</span>
                     </div>
                 </div>
                 
@@ -162,6 +163,12 @@
                 </div>
             </div>
         </div>
+
+        <!-- Bestiaire -->
+        <div class="frosted-glass rounded-xl p-6 shadow-lg border border-blue-900/50 mt-6">
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Bestiaire</h2>
+            <ul id="bestiary-list" class="space-y-1 text-sm"></ul>
+        </div>
     </div>
 
     <!-- Modales de choix -->
@@ -249,6 +256,18 @@
                 <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyForge('armor')">Armure (+3 DEF, 50 or)</button>
             </div>
             <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-800 w-full" onclick="closeForge()">Retour</button>
+        </div>
+    </div>
+
+    <div id="quest-detail-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4 w-80">
+            <h2 id="quest-detail-name" class="text-lg font-bold"></h2>
+            <p id="quest-detail-desc" class="text-sm"></p>
+            <ul id="quest-detail-steps" class="list-disc list-inside text-sm"></ul>
+            <div id="quest-detail-npc" class="text-sm text-blue-200"></div>
+            <h3 class="font-semibold">Dialogues</h3>
+            <div id="quest-detail-dialogues" class="text-sm max-h-40 overflow-y-auto space-y-1"></div>
+            <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-800 w-full" onclick="closeQuestDetail()">Fermer</button>
         </div>
     </div>
 
