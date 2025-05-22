@@ -64,6 +64,32 @@ const enemiesList = [
     { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide" }
 ];
 
+// Ingrédients récoltables pour le futur craft
+const ingredientsData = {
+    herbeSauvage: { name: 'Herbe sauvage', icon: 'fa-leaf', rarity: 'commun', level: 1 },
+    griffeLoup: { name: 'Griffe de loup', icon: 'fa-paw', rarity: 'commun', level: 2 },
+    pierreLune: { name: 'Pierre de lune', icon: 'fa-gem', rarity: 'peuCommun', level: 4 },
+    crocVenimeux: { name: 'Croc venimeux', icon: 'fa-tooth', rarity: 'peuCommun', level: 4 },
+    cendreSpectrale: { name: 'Cendre spectrale', icon: 'fa-ghost', rarity: 'rare', level: 6 },
+    essenceOmbre: { name: "Essence d'ombre", icon: 'fa-eye', rarity: 'rare', level: 6 },
+    coeurGolem: { name: 'Cœur de golem', icon: 'fa-heart', rarity: 'epique', level: 8 },
+    ecailleDragon: { name: 'Écaille de dragon', icon: 'fa-dragon', rarity: 'epique', level: 10 }
+};
+
+const ingredientDropRates = { commun: 0.3, peuCommun: 0.2, rare: 0.1, epique: 0.03 };
+
+function generateIngredientLoot(enemyLevel) {
+    const drops = [];
+    Object.entries(ingredientsData).forEach(([key, ing]) => {
+        if (enemyLevel >= ing.level) {
+            let rate = ingredientDropRates[ing.rarity] * (enemyLevel / ing.level);
+            if (rate > 1) rate = 1;
+            if (Math.random() < rate) drops.push(key);
+        }
+    });
+    return drops;
+}
+
 const scenarios = [
     {
         text: 'Après ce combat, que souhaitez-vous faire ?',
@@ -534,6 +560,10 @@ function renderInventory() {
         megaPotion: { name: 'Méga potion', icon: 'fa-flask-vial' },
         bomb: { name: 'Bombe', icon: 'fa-bomb' }
     };
+    Object.entries(ingredientsData).forEach(([k,v]) => {
+        items[k] = { name: v.name, icon: v.icon };
+    });
+    const usable = ['potion','firePotion','shield','herb','resPotion','megaPotion','bomb'];
     if (!gameState.inventory) {
         gameState.inventory = {};
     }
@@ -541,9 +571,9 @@ function renderInventory() {
         const count = gameState.inventory[key];
         if (count <= 0) return;
         const div = document.createElement('div');
-        div.className = 'bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition cursor-pointer';
+        div.className = 'bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition' + (usable.includes(key) ? ' cursor-pointer' : '');
         div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">x${count}</div></div>`;
-        div.onclick = () => useItem(key);
+        if (usable.includes(key)) div.onclick = () => useItem(key);
         inventoryContainer.appendChild(div);
     });
 }
@@ -745,6 +775,14 @@ function enemyDefeated() {
     const goldEarned = 10 + Math.floor(Math.random() * 6);
     gameState.gold += goldEarned;
     addBattleMessage(`Vous récupérez ${goldEarned} or.`, 'system');
+
+    const ingredientsLooted = generateIngredientLoot(gameState.enemy.level);
+    ingredientsLooted.forEach(key => {
+        if (!gameState.inventory[key]) gameState.inventory[key] = 0;
+        gameState.inventory[key]++;
+        addBattleMessage(`Vous obtenez ${ingredientsData[key].name}.`, 'system');
+    });
+    if (ingredientsLooted.length) renderInventory();
 
     updateHealthBars();
     saveGame();
