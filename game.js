@@ -1,9 +1,9 @@
 /* --------- Données de base --------- */
 const classes = {
-    guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100 },
-    mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100 },
-    voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100 },
-    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-bow-arrow', resource: 'energie', maxResource: 100 }
+    guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
+    mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
+    voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.15 },
+    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-bow-arrow', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.1 }
 };
 
 const advancedClasses = {
@@ -56,6 +56,8 @@ function loadGame() {
     const obj = JSON.parse(data);
     if (obj.player) obj.player = new Player(obj.player);
     if (obj.enemy) obj.enemy = new Enemy(obj.enemy);
+    if (obj.player && !obj.player.statusEffects) obj.player.statusEffects = [];
+    if (obj.enemy && !obj.enemy.statusEffects) obj.enemy.statusEffects = [];
     // Always start a new session on the player's turn to avoid being stuck
     obj.isPlayerTurn = true;
     return obj;
@@ -73,7 +75,8 @@ if (!gameState) {
             maxHealth: 30,
             attackRange: [5, 8],
             defense: 2,
-            nextAttack: 'Morsure'
+            nextAttack: 'Morsure',
+            statusEffects: []
         }),
         inventory: { potion: 3, firePotion: 2, shield: 1, herb: 5, resPotion: 2, megaPotion: 1, bomb: 1 },
         battleLog: ['[Système] Bienvenue dans Lumina. Choisissez votre classe pour commencer.'],
@@ -187,6 +190,15 @@ function updateHealthBars() {
     resourceIcon.className = `fas ${icons[gameState.player.resourceType]} text-purple-400 mr-1`;
 }
 
+function processStatusEffects() {
+    const messages = [
+        ...gameState.player.applyStatusEffects(),
+        ...gameState.enemy.applyStatusEffects()
+    ];
+    messages.forEach(m => addBattleMessage(m, 'system'));
+    updateHealthBars();
+}
+
 // Add message to battle log
 function addBattleMessage(message, type = 'system') {
     const colors = {
@@ -234,6 +246,9 @@ function selectClass(cl) {
         resourceType: info.resource,
         resource: info.resource === 'rage' ? 0 : info.maxResource,
         maxResource: info.maxResource,
+        critRate: info.critRate,
+        dodgeRate: info.dodgeRate,
+        statusEffects: [],
         xp: 0,
         nextLevelXp: 100,
         job: null,
@@ -451,6 +466,7 @@ function useItem(item) {
     } else if (item === 'firePotion') {
         const dmg = 20;
         gameState.enemy.health -= dmg;
+        gameState.enemy.statusEffects.push({ name: 'brulure', duration: 3, value: 5 });
         addBattleMessage(`Lance une potion de feu et inflige ${dmg} dégâts!`, 'player');
     } else if (item === 'shield') {
         gameState.player.defense += 2;
@@ -458,6 +474,7 @@ function useItem(item) {
     } else if (item === 'herb') {
         const heal = 5;
         gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+        gameState.player.statusEffects = [];
         addBattleMessage(`Utilise une herbe curative pour ${heal} PV.`, 'heal');
     } else if (item === 'resPotion') {
         const restore = 30;
@@ -481,6 +498,7 @@ function useItem(item) {
 // Player actions
 function playerAttack() {
     if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
 
     const damage = gameState.player.attackTarget(gameState.enemy);
 
@@ -505,6 +523,7 @@ function playerAttack() {
 
 function playerHeal() {
     if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
 
     const result = gameState.player.heal();
     if (!result) {
@@ -531,6 +550,7 @@ function playerHeal() {
 
 function playerDefend() {
     if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
 
     addBattleMessage(`Se met en position défensive. La prochaine attaque sera réduite.`, 'player');
     gameState.player.defend();
@@ -540,6 +560,7 @@ function playerDefend() {
 
 function playerSpecial() {
     if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
 
     const damage = gameState.player.special(gameState.enemy);
     if (damage === null) {
@@ -570,6 +591,7 @@ function playerSpecial() {
 // Enemy turn
 function enemyTurn() {
     if (gameState.enemy.health <= 0) return;
+    processStatusEffects();
 
     const damage = gameState.enemy.attack(gameState.player);
 
@@ -635,6 +657,7 @@ function spawnNewEnemy() {
         base.attackRange[1] + levelBoost * 2
     ];
     base.defense += Math.floor(gameState.player.level / 2);
+    base.statusEffects = [];
     gameState.enemy = new Enemy(base);
     gameState.isPlayerTurn = true;
 

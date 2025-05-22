@@ -1,6 +1,7 @@
 class Enemy {
     constructor(data) {
         Object.assign(this, data);
+        this.statusEffects = this.statusEffects || [];
     }
 
     takeDamage(dmg) {
@@ -16,6 +17,20 @@ class Enemy {
         );
         player.takeDamage(damage);
         return damage;
+    }
+
+    applyStatusEffects() {
+        const logs = [];
+        this.statusEffects = this.statusEffects.filter(e => {
+            if (e.name === 'poison' || e.name === 'brulure') {
+                this.health -= e.value;
+                logs.push(`${this.name} subit ${e.value} dégâts de ${e.name}.`);
+            }
+            e.duration--;
+            return e.duration > 0;
+        });
+        if (this.health < 0) this.health = 0;
+        return logs;
     }
 }
 
