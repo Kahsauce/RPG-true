@@ -5,13 +5,19 @@ class Player {
         this.shieldActive = false;
         this.dodgeNext = false;
         this.manaShieldActive = false;
+        this.statusEffects = this.statusEffects || [];
+        this.critRate = this.critRate || 0;
+        this.dodgeRate = this.dodgeRate || 0;
     }
 
     attackTarget(target) {
-        const damage = Math.max(
+        let damage = Math.max(
             1,
             this.attack - target.defense + Math.floor(Math.random() * 3)
         );
+        if (Math.random() < (this.critRate || 0)) {
+            damage = Math.floor(damage * 1.5);
+        }
         target.takeDamage(damage);
         if (this.resourceType === 'rage') {
             this.resource = Math.min(this.maxResource, this.resource + 10);
@@ -50,9 +56,26 @@ class Player {
         return damage;
     }
 
+    applyStatusEffects() {
+        const logs = [];
+        this.statusEffects = this.statusEffects.filter(e => {
+            if (e.name === 'poison' || e.name === 'brulure') {
+                this.health -= e.value;
+                logs.push(`${this.name} subit ${e.value} dégâts de ${e.name}.`);
+            }
+            e.duration--;
+            return e.duration > 0;
+        });
+        if (this.health < 0) this.health = 0;
+        return logs;
+    }
+
     takeDamage(dmg) {
         if (this.dodgeNext) {
             this.dodgeNext = false;
+            return 0;
+        }
+        if (Math.random() < (this.dodgeRate || 0)) {
             return 0;
         }
         if (this.shieldActive) {
