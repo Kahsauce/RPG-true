@@ -1,4 +1,5 @@
 /* --------- Données de base --------- */
+const DIFFICULTY_MULTIPLIER = 1.2;
 const classes = {
     guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
     mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
@@ -32,11 +33,26 @@ const jobs = {
 };
 
 const talents = {
-    force: { name: 'Force accrue', bonus: { attack: 2 } },
-    protection: { name: 'Protection renforcée', bonus: { defense: 2 } },
-    comboCrit: { name: 'Folie du combat', bonus: {} },
-    comboHeal: { name: 'Second souffle', bonus: {} },
-    comboMana: { name: 'Canalisation rapide', bonus: {} }
+    guerrier: {
+        frappePuissante: { name: 'Frappe puissante', bonus: { attack: 3 }, description: '+3 ATK' },
+        peauDeFer: { name: 'Peau de fer', bonus: { defense: 3 }, description: '+3 DEF' },
+        maitriseRage: { name: 'Maîtrise de la rage', bonus: { maxResource: 20 }, description: '+20 Rage' }
+    },
+    mage: {
+        puissanceMagique: { name: 'Puissance magique', bonus: { attack: 2, critRate: 0.05 }, description: '+2 ATK, +5% Critique' },
+        barriereArcanique: { name: 'Barrière arcanique', bonus: { defense: 1, maxHealth: 5 }, description: '+1 DEF, +5 PV' },
+        espritSage: { name: 'Esprit sage', bonus: { maxResource: 20 }, description: '+20 Mana' }
+    },
+    voleur: {
+        lameRapide: { name: 'Lame rapide', bonus: { attack: 2, dodgeRate: 0.05 }, description: '+2 ATK, +5% Esquive' },
+        ombreFurtive: { name: 'Ombre furtive', bonus: { dodgeRate: 0.1 }, description: '+10% Esquive' },
+        maitrePoison: { name: 'Maître du poison', bonus: { critRate: 0.05 }, description: '+5% Critique' }
+    },
+    rodeur: {
+        tirPrecis: { name: 'Tir précis', bonus: { attack: 2, critRate: 0.05 }, description: '+2 ATK, +5% Critique' },
+        survieNature: { name: 'Survie en nature', bonus: { maxHealth: 5, defense: 1 }, description: '+5 PV, +1 DEF' },
+        chasseurEvasif: { name: 'Chasseur évasif', bonus: { dodgeRate: 0.05 }, description: '+5% Esquive' }
+    }
 };
 
 const enemiesList = [
@@ -86,9 +102,12 @@ if (!gameState) {
         enemy: new Enemy({
             name: 'Loup des Ombres',
             level: 1,
-            health: 30,
-            maxHealth: 30,
-            attackRange: [5, 8],
+            health: Math.floor(30 * DIFFICULTY_MULTIPLIER),
+            maxHealth: Math.floor(30 * DIFFICULTY_MULTIPLIER),
+            attackRange: [
+                Math.floor(5 * DIFFICULTY_MULTIPLIER),
+                Math.floor(8 * DIFFICULTY_MULTIPLIER)
+            ],
             defense: 2,
             nextAttack: 'Morsure',
             statusEffects: []
@@ -143,6 +162,7 @@ const advancedModal = document.getElementById('advanced-class-modal');
 const advancedButtons = document.getElementById('advanced-buttons');
 const jobModal = document.getElementById('job-modal');
 const talentModal = document.getElementById('talent-modal');
+const talentButtons = document.getElementById('talent-buttons');
 const scenarioModal = document.getElementById('scenario-modal');
 const scenarioText = document.getElementById('scenario-text');
 const scenarioButtons = document.getElementById('scenario-buttons');
@@ -341,13 +361,37 @@ function selectJob(jobName) {
     saveGame();
 }
 
-function chooseTalent(t) {
-    const talent = talents[t];
+function showTalentOptions() {
+    const tSet = talents[gameState.player.class];
+    talentButtons.innerHTML = '';
+    for (const key in tSet) {
+        const t = tSet[key];
+        const b = document.createElement('button');
+        b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
+        b.textContent = `${t.name} (${t.description})`;
+        b.onclick = () => chooseTalent(key);
+        talentButtons.appendChild(b);
+    }
+    talentModal.classList.remove('hidden');
+}
+
+function chooseTalent(key) {
+    const talent = talents[gameState.player.class][key];
     gameState.player.talents.push(talent.name);
     if (talent.bonus.attack) gameState.player.attack += talent.bonus.attack;
     if (talent.bonus.defense) gameState.player.defense += talent.bonus.defense;
+    if (talent.bonus.maxHealth) {
+        gameState.player.maxHealth += talent.bonus.maxHealth;
+        gameState.player.health += talent.bonus.maxHealth;
+    }
+    if (talent.bonus.maxResource) {
+        gameState.player.maxResource += talent.bonus.maxResource;
+        gameState.player.resource += talent.bonus.maxResource;
+    }
+    if (talent.bonus.critRate) gameState.player.critRate += talent.bonus.critRate;
+    if (talent.bonus.dodgeRate) gameState.player.dodgeRate += talent.bonus.dodgeRate;
     talentModal.classList.add('hidden');
-    addBattleMessage(`Nouveau talent : ${talent.name}`, 'system');
+    addBattleMessage(`Nouveau talent : ${talent.name} - ${talent.description}`, 'system');
     updateHealthBars();
     saveGame();
 }
@@ -694,7 +738,7 @@ function enemyDefeated() {
         if (!gameState.player.advancedClass && gameState.player.level >= 3) {
             showAdvancedOptions();
         } else {
-            talentModal.classList.remove('hidden');
+            showTalentOptions();
         }
     }
 
@@ -714,10 +758,11 @@ function spawnNewEnemy() {
     const levelBoost = Math.floor(Math.random() * 3);
     base.level = gameState.player.level + levelBoost;
     base.maxHealth += gameState.player.level * 5 + levelBoost * 10;
+    base.maxHealth = Math.floor(base.maxHealth * DIFFICULTY_MULTIPLIER);
     base.health = base.maxHealth;
     base.attackRange = [
-        base.attackRange[0] + levelBoost * 2,
-        base.attackRange[1] + levelBoost * 2
+        Math.floor((base.attackRange[0] + levelBoost * 2) * DIFFICULTY_MULTIPLIER),
+        Math.floor((base.attackRange[1] + levelBoost * 2) * DIFFICULTY_MULTIPLIER)
     ];
     base.defense += Math.floor(gameState.player.level / 2);
     base.statusEffects = [];
