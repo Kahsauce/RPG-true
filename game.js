@@ -54,7 +54,7 @@ const scenarios = [
         choices: [
             { text: 'Passer à la forge', action: 'forge', next: 0 },
             { text: 'Visiter le magasin', action: 'shop', next: 0 },
-            { text: 'Se reposer', action: 'rest', next: 0 },
+            { text: 'Se reposer (10 or)', action: 'rest', next: 0 },
             { text: 'Continuer la route', action: 'road', next: 0 }
         ]
     }
@@ -386,9 +386,15 @@ function handleScenarioAction(action) {
         showShop();
         return;
     } else if (action === 'rest') {
-        const heal = Math.floor(gameState.player.maxHealth / 2);
-        gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
-        addBattleMessage(`Vous vous reposez et récupérez ${heal} PV.`, 'system');
+        const price = 10;
+        if (gameState.gold < price) {
+            addBattleMessage("Vous n'avez pas assez d'or pour vous reposer.", 'system');
+        } else {
+            gameState.gold -= price;
+            const heal = Math.floor(gameState.player.maxHealth / 2);
+            gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
+            addBattleMessage(`Vous payez ${price} or pour vous reposer et récupérez ${heal} PV.`, 'system');
+        }
         spawnNewEnemy();
     } else {
         spawnNewEnemy();
