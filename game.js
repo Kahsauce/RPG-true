@@ -131,6 +131,10 @@ const scenarioButtons = document.getElementById('scenario-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
 const shopModal = document.getElementById('shop-modal');
 const forgeModal = document.getElementById('forge-modal');
+const shopGoldText = document.getElementById('shop-gold-text');
+const forgeGoldText = document.getElementById('forge-gold-text');
+const shopMessage = document.getElementById('shop-message');
+const forgeMessage = document.getElementById('forge-message');
 
 function playSound(type) {
     try {
@@ -168,6 +172,12 @@ function updateHealthBars() {
     playerDefenseText.textContent = gameState.player.defense;
     if (goldText) {
         goldText.textContent = gameState.gold;
+    }
+    if (shopGoldText) {
+        shopGoldText.textContent = gameState.gold;
+    }
+    if (forgeGoldText) {
+        forgeGoldText.textContent = gameState.gold;
     }
     if (playerIcon) {
         const classIcon = classes[gameState.player.class]?.icon || 'fa-user';
@@ -332,7 +342,9 @@ function handleScenarioAction(action) {
 }
 
 function showShop() {
+    if (shopMessage) shopMessage.textContent = '';
     shopModal.classList.remove('hidden');
+    updateHealthBars();
 }
 
 function closeShop() {
@@ -350,21 +362,26 @@ function buyItem(item) {
         resPotion: 'une potion de ressource'
     };
     const price = prices[item];
+    let message;
     if (gameState.gold >= price) {
         gameState.gold -= price;
         if (!gameState.inventory[item]) gameState.inventory[item] = 0;
         gameState.inventory[item]++;
-        addBattleMessage(`Vous achetez ${names[item]} pour ${price} or.`, 'system');
+        message = `Vous achetez ${names[item]} pour ${price} or.`;
     } else {
-        addBattleMessage("Vous n'avez pas assez d'or.", 'system');
+        message = "Vous n'avez pas assez d'or.";
     }
+    if (shopMessage) shopMessage.textContent = message;
+    addBattleMessage(message, 'system');
     renderInventory();
     updateHealthBars();
     saveGame();
 }
 
 function showForge() {
+    if (forgeMessage) forgeMessage.textContent = '';
     forgeModal.classList.remove('hidden');
+    updateHealthBars();
 }
 
 function closeForge() {
@@ -377,7 +394,9 @@ function closeForge() {
 function buyForge(type) {
     const price = 50;
     if (gameState.gold < price) {
-        addBattleMessage("Pas assez d'or pour la forge.", 'system');
+        const msg = "Pas assez d'or pour la forge.";
+        if (forgeMessage) forgeMessage.textContent = msg;
+        addBattleMessage(msg, 'system');
         updateHealthBars();
         saveGame();
         return;
@@ -385,10 +404,14 @@ function buyForge(type) {
     gameState.gold -= price;
     if (type === 'weapon') {
         gameState.player.attack += 3;
-        addBattleMessage('Votre arme est améliorée (+3 attaque).', 'system');
+        const msg = 'Votre arme est améliorée (+3 attaque).';
+        if (forgeMessage) forgeMessage.textContent = msg;
+        addBattleMessage(msg, 'system');
     } else {
         gameState.player.defense += 3;
-        addBattleMessage('Vous achetez une armure (+3 défense).', 'system');
+        const msg = 'Vous achetez une armure (+3 défense).';
+        if (forgeMessage) forgeMessage.textContent = msg;
+        addBattleMessage(msg, 'system');
     }
     updateHealthBars();
     saveGame();
