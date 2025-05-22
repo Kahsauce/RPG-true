@@ -30,6 +30,7 @@ nécessaire lors de l'exécution.
 Une musique d'ambiance minimaliste est générée à l'aide de l'API Web Audio.
 Les bruitages principaux (attaques, soins...) sont également produits
 dynamiquement afin de renforcer l'atmosphère lors des combats.
+Des cases à cocher permettent désormais d'activer ou non la musique et les bruitages.
 
 ### Développement
 
@@ -50,6 +51,9 @@ Chaque ennemi vaincu rapporte désormais une petite somme d'or. Les gains de
 statistiques lors d'un passage de niveau sont indiqués dans le journal de
 combat. La génération d'énergie du voleur a également été augmentée pour rendre
 ses compétences plus faciles à utiliser.
+En choisissant plusieurs fois l'option « Continuer la route » dans les menus,
+un bonus d'attaque cumulatif apparaît. Il disparaît dès qu'une autre action est
+sélectionnée.
 
 ### Système de craft
 
