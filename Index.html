@@ -192,6 +192,29 @@
         </div>
     </div>
 
+    <div id="shop-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold mb-2">Magasin</h2>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyItem('potion')">Potion (20 or)</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyItem('megaPotion')">Méga potion (50 or)</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyItem('resPotion')">Potion de ressource (30 or)</button>
+            </div>
+            <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-800 w-full" onclick="closeShop()">Retour</button>
+        </div>
+    </div>
+
+    <div id="forge-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl space-y-4">
+            <h2 class="text-lg font-bold mb-2">Forge</h2>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyForge('weapon')">Arme (+3 ATK, 50 or)</button>
+                <button class="px-3 py-2 bg-blue-700 rounded hover:bg-blue-800" onclick="buyForge('armor')">Armure (+3 DEF, 50 or)</button>
+            </div>
+            <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-800 w-full" onclick="closeForge()">Retour</button>
+        </div>
+    </div>
+
     <script src="player.js"></script>
     <script src="enemy.js"></script>
     <script src="game.js"></script>
