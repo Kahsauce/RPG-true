@@ -12,6 +12,7 @@ class Player {
         this.specialCooldown = this.specialCooldown || 0;
         this.comboPoints = this.comboPoints || 0;
         this.attackPenaltyTurns = this.attackPenaltyTurns || 0;
+        this.tempCritBonus = this.tempCritBonus || 0;
     }
 
     startTurn() {
@@ -29,10 +30,12 @@ class Player {
             this.attackPenaltyTurns--;
         }
         let crit = false;
-        if (Math.random() < (this.critRate || 0)) {
+        const critChance = (this.critRate || 0) + (this.tempCritBonus || 0);
+        if (Math.random() < critChance) {
             damage = Math.floor(damage * 1.5);
             crit = true;
         }
+        this.tempCritBonus = 0;
         target.takeDamage(damage);
         this.comboPoints++;
         if (crit) this.comboPoints++;
@@ -97,6 +100,18 @@ class Player {
         }
 
         target.takeDamage(damage);
+
+        // Dynamic talents triggered by special
+        if (this.talents && this.talents.includes('Folie du combat')) {
+            this.tempCritBonus = 0.1;
+        }
+        if (this.talents && this.talents.includes('Second souffle')) {
+            this.health = Math.min(this.maxHealth, this.health + 10);
+        }
+        if (this.talents && this.talents.includes('Canalisation rapide')) {
+            this.resource = Math.min(this.maxResource, this.resource + 15);
+        }
+
         this.specialCooldown = 2;
         this.specialUses++;
         this.attackPenaltyTurns = 1;

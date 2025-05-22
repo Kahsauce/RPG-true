@@ -33,7 +33,10 @@ const jobs = {
 
 const talents = {
     force: { name: 'Force accrue', bonus: { attack: 2 } },
-    protection: { name: 'Protection renforcée', bonus: { defense: 2 } }
+    protection: { name: 'Protection renforcée', bonus: { defense: 2 } },
+    comboCrit: { name: 'Folie du combat', bonus: {} },
+    comboHeal: { name: 'Second souffle', bonus: {} },
+    comboMana: { name: 'Canalisation rapide', bonus: {} }
 };
 
 const enemiesList = [
