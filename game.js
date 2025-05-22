@@ -98,6 +98,8 @@ const enemiesList = [
     { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: "https://via.placeholder.com/128?text=Ombre" },
     { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: "https://via.placeholder.com/128?text=Spectre" },
     { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: "https://via.placeholder.com/128?text=Serpent" }
+    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: "https://via.placeholder.com/128?text=Gardien", location: "https://via.placeholder.com/400x200?text=Ruines", requiredQuest: "artefact", requiredStep: 1 },
+    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: "https://via.placeholder.com/128?text=Spectre2", unlockQuest: "artefact" }
 ];
 
 const locations = [
@@ -270,6 +272,20 @@ const scenarios = [
             { text: 'Donner les herbes', action: 'give-herbs', next: 0 },
             { text: 'Plus tard', action: 'road-return', next: 0 }
         ]
+    },
+    {
+        text: 'Un vieil homme en toge vous adresse la parole près des ruines.',
+        choices: [
+            { text: 'Lui parler', action: 'dialogue-sage', next: 0 },
+            { text: 'Ignorer', action: 'road-return', next: 0 }
+        ]
+    },
+    {
+        text: "Le sage attend votre décision concernant l'orbe.",
+        choices: [
+            { text: "Remettre l'orbe", action: 'give-orb', next: 0 },
+            { text: "Garder l'orbe", action: 'keep-orb', next: 0 }
+        ]
     }
 ];
 
@@ -292,10 +308,27 @@ const dialogues = {
             quest: 'courrier',
             choices: [ { text: 'Je m\'en charge.', end: true } ]
         }
+    ],
+    sage: [
+        {
+            text: "Je recherche un orbe ancien gardé dans ces ruines. Acceptez-vous de me le rapporter ?",
+            quest: "artefact",
+            choices: [
+                { text: "Oui, je vais le trouver.", next: 1 },
+                { text: "Non, désolé.", end: true }
+            ]
+        },
+        {
+            text: "Revenez avec l'orbe et nous dévoilerons son secret.",
+            quest: "artefact",
+            questStep: 1,
+            choices: [ { text: "À bientôt.", end: true } ]
+        }
     ]
 };
 
 const quests = {
+    artefact: { name: 'Artefact ancien', description: "Retrouver l'orbe des ruines pour le sage", reward: 80 },
     courrier: { name: 'Service postal', description: 'Livrer la lettre au village voisin', reward: 30 },
     herbes: { name: 'Herboriste', description: "Apporter 3 herbes à l'herboriste", reward: 40 },
     forge: { name: 'Premier équipement', description: 'Améliorer votre arme ou votre armure', reward: 50 }
@@ -346,7 +379,8 @@ if (!gameState) {
         scenarioStep: 0,
         gold: 50,
         activeQuests: [],
-        completedQuests: []
+        completedQuests: [],
+        questProgress: {}
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -366,6 +400,7 @@ if (!gameState) {
     }
     if (!gameState.activeQuests) gameState.activeQuests = [];
     if (!gameState.completedQuests) gameState.completedQuests = [];
+    if (!gameState.questProgress) gameState.questProgress = {};
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
@@ -767,6 +802,12 @@ function handleScenarioAction(action) {
         } else if (gameState.activeQuests.includes('herbes') && (gameState.inventory.herb || 0) >= 3) {
             showScenario(2);
             return;
+        } else if (gameState.activeQuests.includes('artefact') && gameState.questProgress['artefact'] === 0) {
+            showScenario(3);
+            return;
+        } else if (gameState.activeQuests.includes('artefact') && gameState.questProgress['artefact'] === 2 && (gameState.inventory.orbeAncien || 0) > 0) {
+            showScenario(4);
+            return;
         }
         spawnNewEnemy();
     } else if (action === 'deliver-letter') {
@@ -781,6 +822,16 @@ function handleScenarioAction(action) {
         } else {
             addBattleMessage("Il vous manque des herbes.", 'system');
         }
+        spawnNewEnemy();
+    } else if (action === 'give-orb') {
+        if ((gameState.inventory.orbeAncien || 0) > 0) {
+            gameState.inventory.orbeAncien--;
+            completeQuest('artefact');
+            renderInventory();
+        }
+        spawnNewEnemy();
+    } else if (action === 'keep-orb') {
+        completeQuest('artefact');
         spawnNewEnemy();
     } else if (action === 'road-return') {
         spawnNewEnemy();
@@ -1279,6 +1330,13 @@ function enemyDefeated() {
         gameState.inventory[key]++;
         addBattleMessage(`Vous obtenez ${ingredientsData[key].name}.`, 'system');
     });
+    if (gameState.activeQuests.includes('artefact') && gameState.questProgress && gameState.questProgress['artefact'] === 1 && gameState.enemy.name === 'Gardien antique') {
+        if (!gameState.inventory.orbeAncien) gameState.inventory.orbeAncien = 0;
+        gameState.inventory.orbeAncien++;
+        gameState.questProgress['artefact'] = 2;
+        addBattleMessage("Vous récupérez l'orbe ancien.", 'system');
+        renderInventory();
+    }
     if (ingredientsLooted.length) renderInventory();
 
     updateHealthBars();
@@ -1289,7 +1347,22 @@ function enemyDefeated() {
 
 // Spawn new enemy
 function spawnNewEnemy() {
-    const base = { ...enemiesList[Math.floor(Math.random() * enemiesList.length)] };
+    let available = enemiesList.filter(e => {
+        if (e.requiredQuest) {
+            const step = gameState.questProgress && gameState.questProgress[e.requiredQuest];
+            if (!gameState.activeQuests.includes(e.requiredQuest) || step !== e.requiredStep) {
+                return false;
+            }
+        }
+        if (e.unlockQuest && !gameState.completedQuests.includes(e.unlockQuest)) {
+            return false;
+        }
+        return true;
+    });
+    if (available.length === 0) {
+        available = enemiesList.filter(e => !e.requiredQuest && !e.unlockQuest);
+    }
+    const base = { ...available[Math.floor(Math.random() * available.length)] };
     const levelBoost = Math.floor(Math.random() * 3);
     base.level = gameState.player.level + levelBoost;
     base.maxHealth += gameState.player.level * 5 + levelBoost * 10;
@@ -1304,8 +1377,12 @@ function spawnNewEnemy() {
     gameState.enemy = new Enemy(base);
     if (enemyImage) enemyImage.src = base.img || '';
     if (locationImage) {
-        const loc = locations[Math.floor(Math.random() * locations.length)];
-        locationImage.src = loc.img;
+        if (base.location) {
+            locationImage.src = base.location;
+        } else {
+            const loc = locations[Math.floor(Math.random() * locations.length)];
+            locationImage.src = loc.img;
+        }
     }
     gameState.isPlayerTurn = true;
 
@@ -1318,6 +1395,8 @@ function startQuest(id) {
     if (!gameState.activeQuests.includes(id)) {
         gameState.activeQuests.push(id);
         addBattleMessage(`Nouvelle quête : ${quests[id].name}`, 'system');
+        if (!gameState.questProgress) gameState.questProgress = {};
+        gameState.questProgress[id] = 0;
     }
     updateQuestPanel();
     saveGame();
@@ -1330,6 +1409,7 @@ function completeQuest(id) {
         gameState.completedQuests.push(id);
         gameState.gold += quests[id].reward;
         addBattleMessage(`Quête terminée : ${quests[id].name} (+${quests[id].reward} or)`, 'system');
+        if (gameState.questProgress) delete gameState.questProgress[id];
         updateHealthBars();
         updateQuestPanel();
         saveGame();
@@ -1351,6 +1431,10 @@ function showDialogueStep() {
         b.textContent = c.text;
         b.onclick = () => {
             if (d.quest) startQuest(d.quest);
+            if (d.questStep !== undefined && d.quest) {
+                if (!gameState.questProgress) gameState.questProgress = {};
+                gameState.questProgress[d.quest] = d.questStep;
+            }
             if (c.end) {
                 dialogueModal.classList.add('hidden');
                 spawnNewEnemy();
@@ -1383,4 +1467,3 @@ window.startDialogue = startDialogue;
 
 // Initialize game
 initialize();
-
