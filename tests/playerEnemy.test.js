@@ -34,25 +34,26 @@ let dmg = player.attackTarget(enemy);
 assert.strictEqual(dmg, 8, 'attackTarget should deal expected damage');
 assert.strictEqual(enemy.health, 22, 'enemy health should decrease');
 
-player.health = 40;
+player.health = 30;
 player.resource = 50;
-let skill = player.heal();
-assert.strictEqual(skill, 'manaShield', 'heal becomes mana shield');
-assert.strictEqual(player.resource, 30, 'resource used to activate shield');
+let skill = player.useAbility();
+assert.strictEqual(skill, 'heal', 'ability now heals');
+assert.strictEqual(player.resource, 35, 'resource used to heal');
+assert.strictEqual(player.health, 45, 'health increased by ability');
 let damageTaken = player.takeDamage(10);
-assert.strictEqual(damageTaken, 0, 'damage absorbed by mana');
-assert.strictEqual(player.health, 40, 'health unchanged by shield');
-assert.strictEqual(player.resource, 25, 'resource reduced by absorbed damage');
+assert.strictEqual(damageTaken, 10, 'damage taken normally');
+assert.strictEqual(player.health, 35, 'health after taking damage');
+assert.strictEqual(player.resource, 35, 'mana not regenerated on damage');
 
 player.defend();
 damageTaken = player.takeDamage(10);
 assert.strictEqual(damageTaken, 5, 'damage should be halved when defending');
-assert.strictEqual(player.health, 35, 'player health after defending');
+assert.strictEqual(player.health, 30, 'player health after defending');
 
 player.resource = 30;
 dmg = player.special(enemy);
 assert.strictEqual(dmg, 24, 'special attack damage');
-assert.strictEqual(player.resource, 0, 'resource deducted after special');
+assert.strictEqual(player.resource, 5, 'resource deducted after special');
 assert.strictEqual(enemy.health, 0, 'enemy health after special');
 
 const levels = player.gainXp(15);
@@ -67,7 +68,7 @@ assert.strictEqual(player.defense, 4, 'defense increased');
 const enemyDamage = enemy.attack(player);
 assert.strictEqual(enemyDamage, 1, 'enemy attack damage');
 assert.strictEqual(player.health, 59, 'player health after enemy attack');
-assert.strictEqual(player.resource, 5, 'resource regenerated on damage');
+assert.strictEqual(player.resource, 5, 'no mana gained on damage');
 
 Math.random = originalRandom;
 console.log('Player and Enemy tests passed.');

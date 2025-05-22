@@ -30,7 +30,9 @@ const enemy = new Enemy({
 let dmg = thief.attackTarget(enemy);
 assert.strictEqual(thief.resource, 5, 'energy generated on attack');
 
+thief.dodgeNext = true;
 dmg = thief.takeDamage(10);
-assert.strictEqual(thief.resource, 10, 'energy generated on damage');
+assert.strictEqual(dmg, 0, 'damage dodged');
+assert.strictEqual(thief.resource, 10, 'energy generated on dodge');
 
 console.log('Energy generation tests passed.');

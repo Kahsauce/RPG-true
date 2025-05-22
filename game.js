@@ -11,7 +11,7 @@ const classes = {
 const advancedClasses = {
     guerrier: {
         chevalier: { name: 'Chevalier', attack: 2, defense: 2 },
-        berserker: { name: 'Berserker', attack: 3, defense: 0, critRate: 0.05 }
+        berserker: { name: 'Berserker', attack: 3, defense: 0, critRate: 0.05, effect: 'fury', description: 'Dégâts accrus si blessé' }
     },
     mage: {
         archimage: { name: 'Archimage', attack: 3, defense: 0 },
@@ -22,7 +22,7 @@ const advancedClasses = {
         duelliste: { name: 'Duelliste', attack: 2, defense: 1, dodgeRate: 0.05 }
     },
     rodeur: {
-        ranger: { name: 'Ranger', attack: 2, defense: 1 },
+        ranger: { name: 'Ranger', attack: 2, defense: 1, effect: 'specialCrit', description: 'Spécial critique plus souvent' },
         traqueur: { name: 'Traqueur', attack: 1, defense: 2, critRate: 0.05 }
     }
 };
@@ -379,6 +379,7 @@ function showAdvancedOptions() {
 function selectAdvancedClass(key) {
     const adv = advancedClasses[gameState.player.class][key];
     gameState.player.advancedClass = adv.name;
+    if (adv.effect) gameState.player.advancedEffect = adv.effect;
     const prev = {
         atk: gameState.player.attack,
         def: gameState.player.defense,
@@ -735,11 +736,11 @@ function playerAttack() {
     setTimeout(enemyTurn, 1500);
 }
 
-function playerHeal() {
+function playerAbility() {
     if (!gameState.isPlayerTurn) return;
     processStatusEffects();
 
-    const result = gameState.player.heal();
+    const result = gameState.player.useAbility();
     if (!result) {
         addBattleMessage(`Pas assez de ${gameState.player.resourceType}...`, 'system');
         return;
@@ -748,7 +749,7 @@ function playerHeal() {
     const messages = {
         shield: 'Bouclier levé! Dégâts réduits au prochain coup.',
         dodge: 'En garde! Vous esquiverez la prochaine attaque.',
-        manaShield: 'Bouclier magique actif!'
+        heal: 'Vous récupérez quelques points de vie!'
     };
 
     playerCharacter.classList.add('heal-animation');
@@ -907,7 +908,7 @@ function spawnNewEnemy() {
 
 // Expose actions globally for HTML onclick handlers
 window.playerAttack = playerAttack;
-window.playerHeal = playerHeal;
+window.playerAbility = playerAbility;
 window.playerDefend = playerDefend;
 window.playerSpecial = playerSpecial;
 window.selectClass = selectClass;
