@@ -256,6 +256,20 @@ const scenarios = [
             { text: 'Discuter avec le voyageur', action: 'dialogue-voyageur', next: 0 },
             { text: 'Continuer la route', action: 'road', next: 0 }
         ]
+    },
+    {
+        text: "Vous arrivez au village voisin. L'herboriste attend votre courrier.",
+        choices: [
+            { text: 'Remettre la lettre', action: 'deliver-letter', next: 0 },
+            { text: 'Repartir', action: 'road-return', next: 0 }
+        ]
+    },
+    {
+        text: "L'herboriste examine vos herbes avec attention.",
+        choices: [
+            { text: 'Donner les herbes', action: 'give-herbs', next: 0 },
+            { text: 'Plus tard', action: 'road-return', next: 0 }
+        ]
     }
 ];
 
@@ -282,7 +296,9 @@ const dialogues = {
 };
 
 const quests = {
-    courrier: { name: 'Service postal', description: 'Livrer la lettre au village voisin', reward: 30 }
+    courrier: { name: 'Service postal', description: 'Livrer la lettre au village voisin', reward: 30 },
+    herbes: { name: 'Herboriste', description: "Apporter 3 herbes à l'herboriste", reward: 40 },
+    forge: { name: 'Premier équipement', description: 'Améliorer votre arme ou votre armure', reward: 50 }
 };
 
 /* --------- Chargement/Sauvegarde --------- */
@@ -402,6 +418,8 @@ const shopMessage = document.getElementById('shop-message');
 const forgeMessage = document.getElementById('forge-message');
 const craftButtons = document.getElementById('craft-buttons');
 const craftMessage = document.getElementById('craft-message');
+const activeQuestList = document.getElementById('active-quests');
+const completedQuestList = document.getElementById('completed-quests');
 
 let audioCtx = null;
 let ambientNodes = null;
@@ -545,6 +563,7 @@ function initialize() {
     } else {
         updateHealthBars();
         renderInventory();
+        renderQuests();
         if (enemyImage && gameState.enemy && gameState.enemy.img) {
             enemyImage.src = gameState.enemy.img;
         }
@@ -583,6 +602,7 @@ function selectClass(cl) {
     addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
     updateHealthBars();
     renderInventory();
+    renderQuests();
     saveGame();
 }
 
@@ -714,6 +734,9 @@ function showScenario(step) {
 
 function handleScenarioAction(action) {
     if (action === 'forge') {
+        if (!gameState.activeQuests.includes('forge') && !gameState.completedQuests.includes('forge')) {
+            startQuest('forge');
+        }
         showForge();
         return;
     } else if (action === 'shop') {
@@ -736,6 +759,30 @@ function handleScenarioAction(action) {
             gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
             addBattleMessage(`Vous payez ${price} or pour vous reposer et récupérez ${heal} PV.`, 'system');
         }
+        spawnNewEnemy();
+    } else if (action === 'road') {
+        if (gameState.activeQuests.includes('courrier')) {
+            showScenario(1);
+            return;
+        } else if (gameState.activeQuests.includes('herbes') && (gameState.inventory.herb || 0) >= 3) {
+            showScenario(2);
+            return;
+        }
+        spawnNewEnemy();
+    } else if (action === 'deliver-letter') {
+        completeQuest('courrier');
+        startQuest('herbes');
+        spawnNewEnemy();
+    } else if (action === 'give-herbs') {
+        if ((gameState.inventory.herb || 0) >= 3) {
+            gameState.inventory.herb -= 3;
+            completeQuest('herbes');
+            renderInventory();
+        } else {
+            addBattleMessage("Il vous manque des herbes.", 'system');
+        }
+        spawnNewEnemy();
+    } else if (action === 'road-return') {
         spawnNewEnemy();
     } else {
         spawnNewEnemy();
@@ -872,6 +919,9 @@ function buyForge(type) {
         if (forgeMessage) forgeMessage.textContent = msg;
         addBattleMessage(msg, 'system');
     }
+    if (gameState.activeQuests.includes('forge')) {
+        completeQuest('forge');
+    }
     updateHealthBars();
     saveGame();
 }
@@ -935,6 +985,22 @@ function renderInventory() {
             div.onclick = () => equipItem(key);
         }
         inventoryContainer.appendChild(div);
+    });
+}
+
+function renderQuests() {
+    if (!activeQuestList || !completedQuestList) return;
+    activeQuestList.innerHTML = '';
+    completedQuestList.innerHTML = '';
+    gameState.activeQuests.forEach(id => {
+        const li = document.createElement('li');
+        li.textContent = `${quests[id].name} - ${quests[id].description}`;
+        activeQuestList.appendChild(li);
+    });
+    gameState.completedQuests.forEach(id => {
+        const li = document.createElement('li');
+        li.textContent = quests[id].name;
+        completedQuestList.appendChild(li);
     });
 }
 
@@ -1233,6 +1299,7 @@ function startQuest(id) {
         gameState.activeQuests.push(id);
         addBattleMessage(`Nouvelle quête : ${quests[id].name}`, 'system');
     }
+    renderQuests();
     saveGame();
 }
 
@@ -1244,6 +1311,7 @@ function completeQuest(id) {
         gameState.gold += quests[id].reward;
         addBattleMessage(`Quête terminée : ${quests[id].name} (+${quests[id].reward} or)`, 'system');
         updateHealthBars();
+        renderQuests();
         saveGame();
     }
 }
