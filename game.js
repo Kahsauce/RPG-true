@@ -360,19 +360,61 @@ const forgeMessage = document.getElementById('forge-message');
 const craftButtons = document.getElementById('craft-buttons');
 const craftMessage = document.getElementById('craft-message');
 
+let audioCtx = null;
+let ambientNodes = null;
+
+function startAmbientMusic() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ambientNodes) return;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        osc1.frequency.value = 110;
+        osc2.frequency.value = 220;
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.value = 0.05;
+        osc1.start();
+        osc2.start();
+        ambientNodes = { osc1, osc2, gain };
+    } catch (e) {}
+}
+
+function stopAmbientMusic() {
+    if (ambientNodes) {
+        try {
+            ambientNodes.osc1.stop();
+            ambientNodes.osc2.stop();
+        } catch (e) {}
+        ambientNodes = null;
+    }
+}
+
 function playSound(type) {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = type === 'heal' ? 600 : type === 'player' ? 400 : 200;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        if (type === 'heal') {
+            osc.frequency.value = 700;
+        } else if (type === 'player') {
+            osc.frequency.value = 500;
+        } else if (type === 'enemy') {
+            osc.frequency.value = 250;
+        } else {
+            osc.frequency.value = 300;
+        }
         osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.2);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
         osc.start();
-        osc.stop(ctx.currentTime + 0.2);
+        osc.stop(audioCtx.currentTime + 0.5);
     } catch (e) {}
 }
 
@@ -484,6 +526,7 @@ function selectClass(cl) {
         equipment: { head: null, shoulders: null, legs: null, gloves: null }
     });
     classModal.classList.add('hidden');
+    startAmbientMusic();
     addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
     updateHealthBars();
     renderInventory();
@@ -1050,6 +1093,7 @@ function gameOver() {
         btn.classList.add('opacity-50', 'cursor-not-allowed');
     });
     playerCharacter.classList.add('death-animation');
+    stopAmbientMusic();
     addBattleMessage('Fin de la partie. Rechargez la page pour recommencer.', 'system');
     saveGame();
 }

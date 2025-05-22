@@ -25,6 +25,12 @@ possibles :
 Le jeu utilise Tailwind et Font Awesome via des CDN ; une connexion Internet est
 nécessaire lors de l'exécution.
 
+### Ambiance sonore
+
+Une musique d'ambiance minimaliste est générée à l'aide de l'API Web Audio.
+Les bruitages principaux (attaques, soins...) sont également produits
+dynamiquement afin de renforcer l'atmosphère lors des combats.
+
 ### Développement
 
 Le code JavaScript se trouve maintenant dans `game.js` et les styles dans `style.css`.
