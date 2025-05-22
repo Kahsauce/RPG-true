@@ -589,9 +589,13 @@ function renderCraftOptions() {
         const b = document.createElement('button');
         b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800 text-left';
         const list = Object.entries(r.ingredients)
-            .map(([ing, qty]) => `${ingredientsData[ing].name} x${qty}`)
+            .map(([ing, qty]) => {
+                const have = gameState.inventory[ing] || 0;
+                const color = have >= qty ? 'text-green-300' : 'text-red-300';
+                return `<span class="${color}">${ingredientsData[ing].name} ${have}/${qty}</span>`;
+            })
             .join(', ');
-        b.innerHTML = `<div>${r.name}</div><div class="text-xs text-blue-200">${list}</div>`;
+        b.innerHTML = `<div>${r.name}</div><div class="text-xs">${list}</div>`;
         b.onclick = () => craftItem(key);
         craftButtons.appendChild(b);
     });
@@ -669,9 +673,13 @@ function renderInventory() {
         const count = gameState.inventory[key];
         if (count <= 0) return;
         const div = document.createElement('div');
-        div.className = 'bg-blue-900/30 rounded-lg p-3 flex items-center border border-blue-800/50 hover:bg-blue-800/50 transition' + (usable.includes(key) ? ' cursor-pointer' : '');
+        const consumable = usable.includes(key);
+        const classes = consumable
+            ? 'bg-green-900/30 border-green-800/50 hover:bg-green-800/50 cursor-pointer'
+            : 'bg-purple-900/30 border-purple-800/50 hover:bg-purple-800/50';
+        div.className = `${classes} rounded-lg p-3 flex items-center transition`;
         div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">x${count}</div></div>`;
-        if (usable.includes(key)) div.onclick = () => useItem(key);
+        if (consumable) div.onclick = () => useItem(key);
         inventoryContainer.appendChild(div);
     });
 }

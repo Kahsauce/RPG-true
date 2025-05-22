@@ -49,6 +49,11 @@ ses compétences plus faciles à utiliser.
 
 L'atelier affiche maintenant la liste des ingrédients nécessaires à la
 fabrication de chaque objet afin de planifier plus facilement vos récoltes.
+Les quantités possédées sont indiquées directement pour savoir ce qu'il vous
+manque.
+
+Dans l'inventaire, les consommables apparaissent désormais en vert tandis que
+les composants de craft sont affichés en violet pour une meilleure clarté.
 
 ## Licence
 
