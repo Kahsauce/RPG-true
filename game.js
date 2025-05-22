@@ -1,6 +1,21 @@
 /* --------- Données de base --------- */
 // Réduction de la difficulté globale de 5%
 const DIFFICULTY_MULTIPLIER = 1.14;
+
+function enemyPlaceholder(name) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='100%' height='100%' fill='#444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20'>${name}</text></svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(svg);
+}
+
+function formatBonus(bonus) {
+    const map = { attack: 'ATK', defense: 'DEF', maxHealth: 'PV', maxResource: 'RES', critRate: 'Crit', dodgeRate: 'Esq' };
+    return Object.entries(bonus).map(([k,v]) => {
+        if ((k === 'critRate' || k === 'dodgeRate') && v < 1) {
+            return `${map[k]} +${Math.round(v*100)}%`;
+        }
+        return `${map[k] || k} +${v}`;
+    }).join(' ');
+}
 const classes = {
     guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
     mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
@@ -92,14 +107,14 @@ Object.values(equipmentData).forEach(cls => {
 });
 
 const enemiesList = [
-    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: "https://via.placeholder.com/128?text=Loup", preferredTime: 'night' },
-    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: "https://via.placeholder.com/128?text=Golem" },
-    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: "https://via.placeholder.com/128?text=Esprit", preferredTime: 'night' },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: "https://via.placeholder.com/128?text=Ombre", preferredTime: 'night' },
-    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: "https://via.placeholder.com/128?text=Spectre", preferredTime: 'night' },
-    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: "https://via.placeholder.com/128?text=Serpent", preferredTime: 'day' },
-    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: "https://via.placeholder.com/128?text=Gardien", location: "https://via.placeholder.com/400x200?text=Ruines", requiredQuest: "artefact", requiredStep: 1 },
-    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: "https://via.placeholder.com/128?text=Spectre2", unlockQuest: "artefact", preferredTime: 'night' }
+    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: enemyPlaceholder('Loup'), preferredTime: 'night' },
+    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: enemyPlaceholder('Golem') },
+    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: enemyPlaceholder('Esprit'), preferredTime: 'night' },
+    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: enemyPlaceholder('Ombre'), preferredTime: 'night' },
+    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: enemyPlaceholder('Spectre'), preferredTime: 'night' },
+    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: enemyPlaceholder('Serpent'), preferredTime: 'day' },
+    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: enemyPlaceholder('Gardien'), location: "https://via.placeholder.com/400x200?text=Ruines", requiredQuest: "artefact", requiredStep: 1 },
+    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: enemyPlaceholder('Spectre'), unlockQuest: "artefact", preferredTime: 'night' }
 ];
 
 const locations = [
@@ -256,6 +271,7 @@ const scenarios = [
             { text: "Utiliser l'atelier", action: 'craft', next: 0 },
             { text: 'Se reposer (10 or)', action: 'rest', next: 0 },
             { text: 'Discuter avec le voyageur', action: 'dialogue-voyageur', next: 0 },
+            { text: 'Voir le capitaine', action: 'dialogue-capitaine', next: 0 },
             { text: 'Continuer la route', action: 'road', next: 0 }
         ]
     },
@@ -307,6 +323,11 @@ const dialogues = {
             text: "Justement, pourrais-tu livrer cette lettre au village voisin ?",
             quest: 'courrier',
             choices: [ { text: 'Je m\'en charge.', end: true } ]
+        },
+        {
+            text: "J'aurais besoin de quatre griffes de loup pour un client.",
+            quest: 'collectionGriffes',
+            choices: [ { text: 'Je vais chercher ça.', end: true } ]
         }
     ],
     sage: [
@@ -323,6 +344,19 @@ const dialogues = {
             quest: "artefact",
             questStep: 1,
             choices: [ { text: "À bientôt.", end: true } ]
+        }
+    ],
+    capitaine: [
+        {
+            text: "Soldat, nous manquons de bras pour sécuriser la région.",
+            choices: [
+                { text: 'Chasser 3 loups', quest: 'chasseLoups', end: true },
+                { text: 'Récupérer 3 lingots', quest: 'mineraiRare', end: true },
+                { text: 'Vaincre 2 spectres', quest: 'chasseSpectres', end: true },
+                { text: 'Escorter une caravane', quest: 'escorteCaravane', end: true },
+                { text: 'Garde de la route', quest: 'gardeRoute', end: true },
+                { text: 'Rien pour l\'instant', end: true }
+            ]
         }
     ]
 };
@@ -371,6 +405,81 @@ const quests = {
             'Aller à la forge',
             'Acheter une amélioration'
         ]
+    },
+    chasseLoups: {
+        name: 'Chasse aux loups',
+        description: 'Éliminer 3 Loups des Ombres',
+        reward: 30,
+        npc: 'capitaine',
+        repeatable: true,
+        steps: [ 'Tuer 3 loups' ]
+    },
+    mineraiRare: {
+        name: 'Minerai rare',
+        description: 'Récupérer 3 lingots de fer',
+        reward: 35,
+        npc: 'capitaine',
+        repeatable: true,
+        steps: [ 'Obtenir 3 lingots de fer' ]
+    },
+    chasseSpectres: {
+        name: 'Spectres glacés',
+        description: 'Vaincre 2 Spectres Glaciaux',
+        reward: 50,
+        npc: 'capitaine',
+        steps: [ 'Tuer 2 spectres' ]
+    },
+    explorationDesert: {
+        name: 'Exploration du désert',
+        description: 'Atteindre le désert aride',
+        reward: 60,
+        npc: 'voyageur',
+        steps: [ 'Découvrir le désert' ]
+    },
+    recolteHerbes: {
+        name: 'Cueillir des herbes',
+        description: 'Ramener 5 herbes sauvages',
+        reward: 20,
+        npc: 'herboriste',
+        repeatable: true,
+        steps: [ 'Collecter 5 herbes' ]
+    },
+    escorteCaravane: {
+        name: 'Escorte de caravane',
+        description: 'Vaincre un Serpent des Sables',
+        reward: 40,
+        npc: 'capitaine',
+        steps: [ 'Protéger la caravane' ]
+    },
+    gardeRoute: {
+        name: 'Garde de la route',
+        description: 'Éliminer 5 ennemis',
+        reward: 25,
+        npc: 'capitaine',
+        repeatable: true,
+        steps: [ 'Tuer 5 monstres' ]
+    },
+    chasseOmbre: {
+        name: 'Ombre menaçante',
+        description: 'Tuer une Ombre Silencieuse',
+        reward: 55,
+        npc: 'capitaine',
+        steps: [ 'Éliminer l\'Ombre' ]
+    },
+    collectionGriffes: {
+        name: 'Griffes recherchées',
+        description: 'Rapporter 4 griffes de loup',
+        reward: 30,
+        npc: 'voyageur',
+        repeatable: true,
+        steps: [ 'Collecter 4 griffes' ]
+    },
+    bestiaryEtude: {
+        name: 'Étude du bestiaire',
+        description: 'Découvrir 5 types d\'ennemis',
+        reward: 80,
+        npc: 'sage',
+        steps: [ 'Ajouter 5 entrées au bestiaire' ]
     }
 };
 
@@ -1110,7 +1219,7 @@ function renderInventory() {
     });
     const slotIcons = { head: 'fa-helmet-safety', shoulders: 'fa-shirt', legs: 'fa-socks', gloves: 'fa-hand-back-fist' };
     Object.values(allEquipment).forEach(eq => {
-        items[eq.key] = { name: eq.name, icon: slotIcons[eq.slot] };
+        items[eq.key] = { name: eq.name, icon: slotIcons[eq.slot], bonus: eq.bonus };
     });
     const usable = ['potion','firePotion','shield','herb','resPotion','megaPotion','bomb','elixir'];
     if (!gameState.inventory) {
@@ -1123,7 +1232,7 @@ function renderInventory() {
             const div = document.createElement('div');
             div.className = 'bg-gray-800/50 rounded-lg p-3 flex items-center';
             if (key) {
-                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3"><i class="fas ${slotIcons[slot]} text-white"></i></div><div><div class="font-medium">${items[key].name}</div></div>`;
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3"><i class="fas ${slotIcons[slot]} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">${formatBonus(allEquipment[key].bonus)}</div></div>`;
             } else {
                 div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3"><i class="fas ${slotIcons[slot]} text-white"></i></div><div><div class="font-medium">Aucun</div></div>`;
             }
@@ -1143,7 +1252,9 @@ function renderInventory() {
             classes += ' cursor-pointer';
         }
         div.className = `${classes} rounded-lg p-3 flex items-center transition`;
-        div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">x${count}</div></div>`;
+        let bonusText = '';
+        if (equipmentItem) bonusText = `<div class="text-xs text-blue-200">${formatBonus(equipmentItem.bonus)}</div>`;
+        div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div>${bonusText}<div class="text-xs text-blue-200">x${count}</div></div>`;
         if (consumable) {
             div.onclick = () => useItem(key);
         } else if (equipmentItem) {
@@ -1166,7 +1277,7 @@ function renderQuests() {
     } else {
         gameState.activeQuests.forEach(id => {
             const li = document.createElement('li');
-            li.textContent = `${quests[id].name} - ${quests[id].description}`;
+            li.textContent = `${quests[id].name} - ${quests[id].description} (\u00a0${quests[id].reward} or)`;
             li.className = 'cursor-pointer hover:text-blue-300';
             li.onclick = () => showQuestDetail(id);
             activeQuestList.appendChild(li);
@@ -1264,6 +1375,12 @@ function equipItem(key) {
     }
     const slot = eq.slot;
     const currentKey = gameState.player.equipment[slot];
+    const preview = formatBonus(eq.bonus);
+    const currentName = currentKey ? allEquipment[currentKey].name : null;
+    let msg = `Équiper ${eq.name}`;
+    if (preview) msg += ` (${preview})`;
+    if (currentName) msg += ` à la place de ${currentName}`;
+    if (!confirm(msg + ' ?')) return;
     if (currentKey) {
         const curEq = allEquipment[currentKey];
         Object.entries(curEq.bonus).forEach(([stat,val]) => {
@@ -1468,6 +1585,7 @@ function enemyDefeated() {
         gameState.inventory[key]++;
         addBattleMessage(`Vous obtenez ${ingredientsData[key].name}.`, 'system');
     });
+    checkQuestLoot(ingredientsLooted);
     if (gameState.activeQuests.includes('artefact') && gameState.questProgress && gameState.questProgress['artefact'] === 1 && gameState.enemy.name === 'Gardien antique') {
         if (!gameState.inventory.orbeAncien) gameState.inventory.orbeAncien = 0;
         gameState.inventory.orbeAncien++;
@@ -1483,6 +1601,7 @@ function enemyDefeated() {
         attackRange: gameState.enemy.attackRange,
         defense: gameState.enemy.defense
     };
+    checkQuestKill(gameState.enemy.name);
 
     renderBestiary();
 
@@ -1534,11 +1653,16 @@ function spawnNewEnemy() {
     gameState.enemy = new Enemy(base);
     if (enemyImage) enemyImage.src = base.img || '';
     if (locationImage) {
+        let locObj;
         if (base.location) {
             locationImage.src = base.location;
+            locObj = locations.find(l => l.img === base.location);
         } else {
-            const loc = locations[Math.floor(Math.random() * locations.length)];
-            locationImage.src = loc.img;
+            locObj = locations[Math.floor(Math.random() * locations.length)];
+            locationImage.src = locObj.img;
+        }
+        if (gameState.activeQuests.includes('explorationDesert') && locObj && locObj.name.includes('Désert')) {
+            completeQuest('explorationDesert');
         }
     }
     gameState.isPlayerTurn = true;
@@ -1551,7 +1675,7 @@ function spawnNewEnemy() {
 function startQuest(id) {
     if (!gameState.activeQuests.includes(id)) {
         gameState.activeQuests.push(id);
-        addBattleMessage(`Nouvelle quête : ${quests[id].name}`, 'system');
+        addBattleMessage(`Nouvelle quête : ${quests[id].name} (Récompense: ${quests[id].reward} or)`, 'system');
         if (!gameState.questProgress) gameState.questProgress = {};
         gameState.questProgress[id] = 0;
     }
@@ -1573,7 +1697,68 @@ function completeQuest(id) {
     }
 }
 
+function checkQuestKill(name) {
+    if (gameState.activeQuests.includes('chasseLoups') && name === 'Loup des Ombres') {
+        gameState.questProgress.chasseLoups++;
+        if (gameState.questProgress.chasseLoups >= 3) completeQuest('chasseLoups');
+    }
+    if (gameState.activeQuests.includes('chasseSpectres') && name === 'Spectre Glacial') {
+        gameState.questProgress.chasseSpectres++;
+        if (gameState.questProgress.chasseSpectres >= 2) completeQuest('chasseSpectres');
+    }
+    if (gameState.activeQuests.includes('escorteCaravane') && name === 'Serpent des Sables') {
+        completeQuest('escorteCaravane');
+    }
+    if (gameState.activeQuests.includes('gardeRoute')) {
+        gameState.questProgress.gardeRoute++;
+        if (gameState.questProgress.gardeRoute >= 5) completeQuest('gardeRoute');
+    }
+    if (gameState.activeQuests.includes('chasseOmbre') && name === 'Ombre Silencieuse') {
+        completeQuest('chasseOmbre');
+    }
+    if (gameState.activeQuests.includes('bestiaryEtude')) {
+        const discovered = Object.keys(gameState.bestiary).length;
+        if (discovered >= 5) completeQuest('bestiaryEtude');
+    }
+}
+
+function checkQuestLoot(itemsLooted) {
+    if (gameState.activeQuests.includes('mineraiRare')) {
+        itemsLooted.forEach(i => {
+            if (i === 'lingotFer') {
+                gameState.questProgress.mineraiRare++;
+            }
+        });
+        if (gameState.questProgress.mineraiRare >= 3) completeQuest('mineraiRare');
+    }
+    if (gameState.activeQuests.includes('recolteHerbes')) {
+        itemsLooted.forEach(i => {
+            if (i === 'herbeSauvage') {
+                gameState.questProgress.recolteHerbes++;
+            }
+        });
+        if (gameState.questProgress.recolteHerbes >= 5) completeQuest('recolteHerbes');
+    }
+    if (gameState.activeQuests.includes('collectionGriffes')) {
+        itemsLooted.forEach(i => {
+            if (i === 'griffeLoup') {
+                gameState.questProgress.collectionGriffes++;
+            }
+        });
+        if (gameState.questProgress.collectionGriffes >= 4) completeQuest('collectionGriffes');
+    }
+}
+
 function startDialogue(id, step = 0) {
+    const dlg = dialogues[id];
+    if (dlg) {
+        while (dlg[step] && dlg[step].quest && dlg[step].questStep === undefined && gameState.activeQuests.includes(dlg[step].quest)) {
+            step++;
+        }
+        while (dlg[step] && dlg[step].questStep !== undefined && gameState.questProgress[dlg[step].quest] !== dlg[step].questStep) {
+            step++;
+        }
+    }
     gameState.currentDialogue = { id, step };
     showDialogueStep();
 }
