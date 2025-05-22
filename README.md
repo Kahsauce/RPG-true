@@ -27,9 +27,16 @@ nécessaire lors de l'exécution.
 
 ### Développement
 
-Le code JavaScript se trouve maintenant dans `game.js` et les styles dans `style.css`. Les données (ennemis,
-scénarios, inventaire) sont structurées pour faciliter l'ajout de nouveaux
-éléments.
+Le code JavaScript se trouve maintenant dans `game.js` et les styles dans `style.css`.
+Les données (ennemis, scénarios, inventaire) sont structurées pour faciliter l'ajout
+de nouveaux éléments.
+
+### Évolutions de classe
+
+À partir du niveau 3, votre personnage peut évoluer vers une version avancée de sa
+classe. Chaque classe de base dispose désormais de plusieurs évolutions possibles
+aux bonus variés (attaque, défense, critique, esquive, etc.). Les avantages sont
+affichés lors du choix et rappelés quand l'évolution est appliquée.
 
 ## Licence
 

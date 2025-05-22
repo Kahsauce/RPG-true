@@ -7,10 +7,22 @@ const classes = {
 };
 
 const advancedClasses = {
-    guerrier: { chevalier: { name: 'Chevalier', attack: 2, defense: 2 } },
-    mage: { archimage: { name: 'Archimage', attack: 3, defense: 0 } },
-    voleur: { assassin: { name: 'Assassin', attack: 3, defense: 1 } },
-    rodeur: { ranger: { name: 'Ranger', attack: 2, defense: 1 } }
+    guerrier: {
+        chevalier: { name: 'Chevalier', attack: 2, defense: 2 },
+        berserker: { name: 'Berserker', attack: 3, defense: 0, critRate: 0.05 }
+    },
+    mage: {
+        archimage: { name: 'Archimage', attack: 3, defense: 0 },
+        enchanteur: { name: 'Enchanteur', attack: 2, defense: 1, maxHealth: 5 }
+    },
+    voleur: {
+        assassin: { name: 'Assassin', attack: 3, defense: 1 },
+        duelliste: { name: 'Duelliste', attack: 2, defense: 1, dodgeRate: 0.05 }
+    },
+    rodeur: {
+        ranger: { name: 'Ranger', attack: 2, defense: 1 },
+        traqueur: { name: 'Traqueur', attack: 1, defense: 2, critRate: 0.05 }
+    }
 };
 
 const jobs = {
@@ -268,7 +280,14 @@ function showAdvancedOptions() {
     for (const key in adv) {
         const b = document.createElement('button');
         b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
-        b.textContent = adv[key].name;
+        const a = adv[key];
+        const bonuses = [];
+        if (a.attack) bonuses.push(`+${a.attack} ATK`);
+        if (a.defense) bonuses.push(`+${a.defense} DEF`);
+        if (a.maxHealth) bonuses.push(`+${a.maxHealth} PV`);
+        if (a.critRate) bonuses.push(`+${Math.round(a.critRate*100)}% Crit`);
+        if (a.dodgeRate) bonuses.push(`+${Math.round(a.dodgeRate*100)}% Esquive`);
+        b.textContent = `${a.name} (${bonuses.join(', ')})`;
         b.onclick = () => selectAdvancedClass(key);
         advancedButtons.appendChild(b);
     }
@@ -278,10 +297,22 @@ function showAdvancedOptions() {
 function selectAdvancedClass(key) {
     const adv = advancedClasses[gameState.player.class][key];
     gameState.player.advancedClass = adv.name;
-    gameState.player.attack += adv.attack;
-    gameState.player.defense += adv.defense;
+    if (adv.attack) gameState.player.attack += adv.attack;
+    if (adv.defense) gameState.player.defense += adv.defense;
+    if (adv.maxHealth) {
+        gameState.player.maxHealth += adv.maxHealth;
+        gameState.player.health += adv.maxHealth;
+    }
+    if (adv.critRate) gameState.player.critRate += adv.critRate;
+    if (adv.dodgeRate) gameState.player.dodgeRate += adv.dodgeRate;
     advancedModal.classList.add('hidden');
-    addBattleMessage(`Évolution en ${adv.name}!`, 'system');
+    const bonuses = [];
+    if (adv.attack) bonuses.push(`+${adv.attack} ATK`);
+    if (adv.defense) bonuses.push(`+${adv.defense} DEF`);
+    if (adv.maxHealth) bonuses.push(`+${adv.maxHealth} PV`);
+    if (adv.critRate) bonuses.push(`+${Math.round(adv.critRate*100)}% Crit`);
+    if (adv.dodgeRate) bonuses.push(`+${Math.round(adv.dodgeRate*100)}% Esquive`);
+    addBattleMessage(`Évolution en ${adv.name} ! Avantages : ${bonuses.join(', ')}`, 'system');
     updateHealthBars();
     saveGame();
 }
