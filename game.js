@@ -1677,6 +1677,7 @@ function spawnNewEnemy() {
 
     addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
     updateHealthBars();
+    updateQuestPanel();
     saveGame();
 }
 
