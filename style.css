@@ -38,3 +38,17 @@
             animation: fadeOut 2s forwards;
         }
 
+        .location-img {
+            width: 100%;
+            height: 10rem;
+            object-fit: cover;
+        }
+
+        .enemy-img {
+            width: 8rem;
+            height: 8rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+

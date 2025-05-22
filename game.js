@@ -92,12 +92,19 @@ Object.values(equipmentData).forEach(cls => {
 });
 
 const enemiesList = [
-    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure" },
-    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing" },
-    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral" },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse" },
-    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé" },
-    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide" }
+    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: "https://via.placeholder.com/128?text=Loup" },
+    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: "https://via.placeholder.com/128?text=Golem" },
+    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: "https://via.placeholder.com/128?text=Esprit" },
+    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: "https://via.placeholder.com/128?text=Ombre" },
+    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: "https://via.placeholder.com/128?text=Spectre" },
+    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: "https://via.placeholder.com/128?text=Serpent" }
+];
+
+const locations = [
+    { name: 'Forêt enchantée', img: 'https://via.placeholder.com/400x200?text=Foret' },
+    { name: 'Caverne sombre', img: 'https://via.placeholder.com/400x200?text=Caverne' },
+    { name: 'Désert aride', img: 'https://via.placeholder.com/400x200?text=Desert' },
+    { name: 'Château en ruines', img: 'https://via.placeholder.com/400x200?text=Chateau' }
 ];
 
 // Ingrédients récoltables pour le futur craft
@@ -325,6 +332,8 @@ const battleLog = document.getElementById('battle-log');
 const playerCharacter = document.getElementById('player-character');
 const playerIcon = document.getElementById('player-icon');
 const enemyCharacter = document.getElementById('enemy-character');
+const enemyImage = document.getElementById('enemy-image');
+const locationImage = document.getElementById('location-image');
 const playerName = document.getElementById('player-name');
 const playerLevelText = document.getElementById('player-level');
 const playerHpText = document.getElementById('player-hp-text');
@@ -434,6 +443,9 @@ function updateHealthBars() {
     enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
     enemyName.textContent = gameState.enemy.name;
     playerName.textContent = gameState.player.name;
+    if (enemyImage && gameState.enemy.img) {
+        enemyImage.src = gameState.enemy.img;
+    }
     playerAttackText.textContent = gameState.player.attack;
     playerDefenseText.textContent = gameState.player.defense;
     if (playerCritText) {
@@ -499,6 +511,13 @@ function initialize() {
     } else {
         updateHealthBars();
         renderInventory();
+        if (enemyImage && gameState.enemy && gameState.enemy.img) {
+            enemyImage.src = gameState.enemy.img;
+        }
+        if (locationImage) {
+            const loc = locations[Math.floor(Math.random() * locations.length)];
+            locationImage.src = loc.img;
+        }
     }
 }
 
@@ -1159,6 +1178,11 @@ function spawnNewEnemy() {
     base.defense += Math.floor(gameState.player.level / 2);
     base.statusEffects = [];
     gameState.enemy = new Enemy(base);
+    if (enemyImage) enemyImage.src = base.img || '';
+    if (locationImage) {
+        const loc = locations[Math.floor(Math.random() * locations.length)];
+        locationImage.src = loc.img;
+    }
     gameState.isPlayerTurn = true;
 
     addBattleMessage(`Un ${gameState.enemy.name} apparaît!`, 'system');
