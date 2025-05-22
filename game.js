@@ -5,7 +5,7 @@ const classes = {
     guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
     mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
     voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.15 },
-    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-bow-arrow', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.1 }
+    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-person-hiking', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.1 }
 };
 
 const advancedClasses = {
@@ -56,6 +56,41 @@ const talents = {
     }
 };
 
+// Équipement spécifique à chaque classe
+const equipmentData = {
+    guerrier: {
+        head: { key: 'casqueGuerrier', name: 'Casque robuste', slot: 'head', bonus: { defense: 2 } },
+        shoulders: { key: 'epaulieresGuerrier', name: "Épaulières d'acier", slot: 'shoulders', bonus: { defense: 2 } },
+        legs: { key: 'jambieresGuerrier', name: 'Jambières lourdes', slot: 'legs', bonus: { maxHealth: 5 } },
+        gloves: { key: 'gantsGuerrier', name: 'Gants de puissance', slot: 'gloves', bonus: { attack: 1 } }
+    },
+    mage: {
+        head: { key: 'casqueMage', name: 'Capuche mystique', slot: 'head', bonus: { maxResource: 10 } },
+        shoulders: { key: 'epaulieresMage', name: 'Épaulettes enchantées', slot: 'shoulders', bonus: { defense: 1 } },
+        legs: { key: 'jambieresMage', name: 'Bas de robe renforcé', slot: 'legs', bonus: { maxHealth: 5 } },
+        gloves: { key: 'gantsMage', name: 'Gants de mana', slot: 'gloves', bonus: { attack: 1 } }
+    },
+    voleur: {
+        head: { key: 'casqueVoleur', name: 'Capuche discrète', slot: 'head', bonus: { dodgeRate: 0.05 } },
+        shoulders: { key: 'epaulieresVoleur', name: 'Épaulières légères', slot: 'shoulders', bonus: { defense: 1 } },
+        legs: { key: 'jambieresVoleur', name: 'Jambières souples', slot: 'legs', bonus: { dodgeRate: 0.05 } },
+        gloves: { key: 'gantsVoleur', name: "Gants d'agilité", slot: 'gloves', bonus: { attack: 1 } }
+    },
+    rodeur: {
+        head: { key: 'casqueRodeur', name: 'Capuche du rôdeur', slot: 'head', bonus: { critRate: 0.05 } },
+        shoulders: { key: 'epaulieresRodeur', name: 'Épaules forestières', slot: 'shoulders', bonus: { defense: 1 } },
+        legs: { key: 'jambieresRodeur', name: 'Jambières de chasseur', slot: 'legs', bonus: { dodgeRate: 0.05 } },
+        gloves: { key: 'gantsRodeur', name: "Gants d'archer", slot: 'gloves', bonus: { attack: 1 } }
+    }
+};
+
+const allEquipment = {};
+Object.values(equipmentData).forEach(cls => {
+    Object.values(cls).forEach(eq => {
+        allEquipment[eq.key] = eq;
+    });
+});
+
 const enemiesList = [
     { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure" },
     { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing" },
@@ -75,6 +110,10 @@ const ingredientsData = {
     essenceOmbre: { name: "Essence d'ombre", icon: 'fa-eye', rarity: 'rare', level: 6 },
     coeurGolem: { name: 'Cœur de golem', icon: 'fa-heart', rarity: 'epique', level: 8 },
     ecailleDragon: { name: 'Écaille de dragon', icon: 'fa-dragon', rarity: 'epique', level: 10 }
+    , lingotFer: { name: 'Lingot de fer', icon: 'fa-cubes', rarity: 'commun', level: 2 }
+    , cuirSouple: { name: 'Cuir souple', icon: 'fa-feather', rarity: 'commun', level: 2 }
+    , tissuMagique: { name: 'Tissu magique', icon: 'fa-scroll', rarity: 'peuCommun', level: 3 }
+    , orbeAncien: { name: 'Orbe ancien', icon: 'fa-gem', rarity: 'rare', level: 6 }
 };
 
 const ingredientDropRates = { commun: 0.3, peuCommun: 0.2, rare: 0.1, epique: 0.03 };
@@ -104,6 +143,86 @@ const craftRecipes = {
         name: 'Élixir ultime',
         result: 'elixir',
         ingredients: { coeurGolem: 1, ecailleDragon: 1 }
+    },
+    casqueGuerrier: {
+        name: 'Casque robuste',
+        result: 'casqueGuerrier',
+        ingredients: { lingotFer: 2, cuirSouple: 1 }
+    },
+    epaulieresGuerrier: {
+        name: 'Épaulières d\'acier',
+        result: 'epaulieresGuerrier',
+        ingredients: { lingotFer: 2, cuirSouple: 1 }
+    },
+    jambieresGuerrier: {
+        name: 'Jambières lourdes',
+        result: 'jambieresGuerrier',
+        ingredients: { lingotFer: 1, cuirSouple: 2 }
+    },
+    gantsGuerrier: {
+        name: 'Gants de puissance',
+        result: 'gantsGuerrier',
+        ingredients: { cuirSouple: 2 }
+    },
+    casqueMage: {
+        name: 'Capuche mystique',
+        result: 'casqueMage',
+        ingredients: { tissuMagique: 2, orbeAncien: 1 }
+    },
+    epaulieresMage: {
+        name: 'Épaulettes enchantées',
+        result: 'epaulieresMage',
+        ingredients: { tissuMagique: 2 }
+    },
+    jambieresMage: {
+        name: 'Bas de robe renforcé',
+        result: 'jambieresMage',
+        ingredients: { tissuMagique: 1, cuirSouple: 1 }
+    },
+    gantsMage: {
+        name: 'Gants de mana',
+        result: 'gantsMage',
+        ingredients: { tissuMagique: 1, orbeAncien: 1 }
+    },
+    casqueVoleur: {
+        name: 'Capuche discrète',
+        result: 'casqueVoleur',
+        ingredients: { cuirSouple: 2 }
+    },
+    epaulieresVoleur: {
+        name: 'Épaulières légères',
+        result: 'epaulieresVoleur',
+        ingredients: { cuirSouple: 1, tissuMagique: 1 }
+    },
+    jambieresVoleur: {
+        name: 'Jambières souples',
+        result: 'jambieresVoleur',
+        ingredients: { cuirSouple: 2 }
+    },
+    gantsVoleur: {
+        name: 'Gants d\'agilité',
+        result: 'gantsVoleur',
+        ingredients: { cuirSouple: 1 }
+    },
+    casqueRodeur: {
+        name: 'Capuche du rôdeur',
+        result: 'casqueRodeur',
+        ingredients: { cuirSouple: 1, tissuMagique: 1 }
+    },
+    epaulieresRodeur: {
+        name: 'Épaules forestières',
+        result: 'epaulieresRodeur',
+        ingredients: { cuirSouple: 1, lingotFer: 1 }
+    },
+    jambieresRodeur: {
+        name: 'Jambières de chasseur',
+        result: 'jambieresRodeur',
+        ingredients: { cuirSouple: 2 }
+    },
+    gantsRodeur: {
+        name: 'Gants d\'archer',
+        result: 'gantsRodeur',
+        ingredients: { cuirSouple: 1 }
     }
 };
 
@@ -145,6 +264,9 @@ function loadGame() {
     if (obj.enemy) obj.enemy = new Enemy(obj.enemy);
     if (obj.player && !obj.player.statusEffects) obj.player.statusEffects = [];
     if (obj.enemy && !obj.enemy.statusEffects) obj.enemy.statusEffects = [];
+    if (obj.player && !obj.player.equipment) {
+        obj.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
+    }
     // Always start a new session on the player's turn to avoid being stuck
     obj.isPlayerTurn = true;
     return obj;
@@ -189,6 +311,9 @@ if (!gameState) {
     }
     if (gameState.gold === undefined) {
         gameState.gold = 50;
+    }
+    if (gameState.player && !gameState.player.equipment) {
+        gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
 }
 
@@ -355,7 +480,8 @@ function selectClass(cl) {
         nextLevelXp: 100,
         job: null,
         talents: [],
-        advancedClass: null
+        advancedClass: null,
+        equipment: { head: null, shoulders: null, legs: null, gloves: null }
     });
     classModal.classList.add('hidden');
     addBattleMessage(`Vous avez choisi la classe ${info.name}.`, 'system');
@@ -652,6 +778,8 @@ function buyForge(type) {
 
 function renderInventory() {
     inventoryContainer.innerHTML = '';
+    const equipDisplay = document.getElementById('equipment-display');
+    if (equipDisplay) equipDisplay.innerHTML = '';
     const items = {
         potion: { name: 'Potion de soin', icon: 'fa-flask' },
         firePotion: { name: 'Potion de feu', icon: 'fa-fire' },
@@ -665,21 +793,47 @@ function renderInventory() {
     Object.entries(ingredientsData).forEach(([k,v]) => {
         items[k] = { name: v.name, icon: v.icon };
     });
+    const slotIcons = { head: 'fa-helmet-safety', shoulders: 'fa-shirt', legs: 'fa-socks', gloves: 'fa-hand-back-fist' };
+    Object.values(allEquipment).forEach(eq => {
+        items[eq.key] = { name: eq.name, icon: slotIcons[eq.slot] };
+    });
     const usable = ['potion','firePotion','shield','herb','resPotion','megaPotion','bomb','elixir'];
     if (!gameState.inventory) {
         gameState.inventory = {};
+    }
+    // Affichage de l'équipement porté
+    if (equipDisplay && gameState.player && gameState.player.equipment) {
+        ['head','shoulders','legs','gloves'].forEach(slot => {
+            const key = gameState.player.equipment[slot];
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800/50 rounded-lg p-3 flex items-center';
+            if (key) {
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3"><i class="fas ${slotIcons[slot]} text-white"></i></div><div><div class="font-medium">${items[key].name}</div></div>`;
+            } else {
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3"><i class="fas ${slotIcons[slot]} text-white"></i></div><div><div class="font-medium">Aucun</div></div>`;
+            }
+            equipDisplay.appendChild(div);
+        });
     }
     Object.keys(gameState.inventory).forEach(key => {
         const count = gameState.inventory[key];
         if (count <= 0) return;
         const div = document.createElement('div');
         const consumable = usable.includes(key);
-        const classes = consumable
-            ? 'bg-green-900/30 border-green-800/50 hover:bg-green-800/50 cursor-pointer'
-            : 'bg-purple-900/30 border-purple-800/50 hover:bg-purple-800/50';
+        const equipmentItem = allEquipment[key];
+        let classes = 'bg-purple-900/30 border-purple-800/50 hover:bg-purple-800/50';
+        if (consumable) {
+            classes = 'bg-green-900/30 border-green-800/50 hover:bg-green-800/50 cursor-pointer';
+        } else if (equipmentItem) {
+            classes += ' cursor-pointer';
+        }
         div.className = `${classes} rounded-lg p-3 flex items-center transition`;
         div.innerHTML = `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mr-3"><i class="fas ${items[key].icon} text-white"></i></div><div><div class="font-medium">${items[key].name}</div><div class="text-xs text-blue-200">x${count}</div></div>`;
-        if (consumable) div.onclick = () => useItem(key);
+        if (consumable) {
+            div.onclick = () => useItem(key);
+        } else if (equipmentItem) {
+            div.onclick = () => equipItem(key);
+        }
         inventoryContainer.appendChild(div);
     });
 }
@@ -721,6 +875,33 @@ function useItem(item) {
         addBattleMessage("L'élixir restaure entièrement vos forces!", 'heal');
     }
     gameState.inventory[item]--;
+    renderInventory();
+    updateHealthBars();
+    saveGame();
+}
+
+function equipItem(key) {
+    const eq = allEquipment[key];
+    if (!eq) return;
+    if (eq.class && eq.class !== gameState.player.class) {
+        addBattleMessage("Cet équipement ne convient pas à votre classe.", 'system');
+        return;
+    }
+    const slot = eq.slot;
+    const currentKey = gameState.player.equipment[slot];
+    if (currentKey) {
+        const curEq = allEquipment[currentKey];
+        Object.entries(curEq.bonus).forEach(([stat,val]) => {
+            gameState.player[stat] -= val;
+        });
+        gameState.inventory[currentKey] = (gameState.inventory[currentKey] || 0) + 1;
+    }
+    Object.entries(eq.bonus).forEach(([stat,val]) => {
+        if (gameState.player[stat] === undefined) gameState.player[stat] = 0;
+        gameState.player[stat] += val;
+    });
+    gameState.player.equipment[slot] = key;
+    gameState.inventory[key]--;
     renderInventory();
     updateHealthBars();
     saveGame();
@@ -955,6 +1136,7 @@ window.buyForge = buyForge;
 window.closeForge = closeForge;
 window.craftItem = craftItem;
 window.closeCraft = closeCraft;
+window.equipItem = equipItem;
 
 // Initialize game
 initialize();
