@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "Minimalist RPG prototype",
   "scripts": {
+    "setup": "sh scripts/setupDependencies.sh",
     "test": "node tests/runAllTests.js",
     "start": "node server.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^23.1.0"
+  }
 }
