@@ -212,6 +212,8 @@ const enemyHpText = document.getElementById('enemy-hp-text');
 const xpText = document.getElementById('xp-text');
 const playerAttackText = document.getElementById('player-attack-text');
 const playerDefenseText = document.getElementById('player-defense-text');
+const playerCritText = document.getElementById('player-crit-text');
+const playerDodgeText = document.getElementById('player-dodge-text');
 const goldText = document.getElementById('gold-text');
 const classModal = document.getElementById('class-modal');
 const advancedModal = document.getElementById('advanced-class-modal');
@@ -267,6 +269,12 @@ function updateHealthBars() {
     playerName.textContent = gameState.player.name;
     playerAttackText.textContent = gameState.player.attack;
     playerDefenseText.textContent = gameState.player.defense;
+    if (playerCritText) {
+        playerCritText.textContent = `${Math.round(gameState.player.critRate * 100)}%`;
+    }
+    if (playerDodgeText) {
+        playerDodgeText.textContent = `${Math.round(gameState.player.dodgeRate * 100)}%`;
+    }
     if (goldText) {
         goldText.textContent = gameState.gold;
     }

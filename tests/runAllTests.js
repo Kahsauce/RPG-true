@@ -4,3 +4,4 @@ require('./inventory.test.js');
 require('./statusEffects.test.js');
 require('./energyGold.test.js');
 require('./restCost.test.js');
+require('./critDodge.test.js');
