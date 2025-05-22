@@ -78,6 +78,34 @@ const ingredientsData = {
 
 const ingredientDropRates = { commun: 0.3, peuCommun: 0.2, rare: 0.1, epique: 0.03 };
 
+const craftRecipes = {
+    potion: {
+        name: 'Potion de soin',
+        result: 'potion',
+        ingredients: { herbeSauvage: 2 }
+    },
+    firePotion: {
+        name: 'Potion de feu',
+        result: 'firePotion',
+        ingredients: { pierreLune: 1, crocVenimeux: 1 }
+    },
+    megaPotion: {
+        name: 'Méga potion',
+        result: 'megaPotion',
+        ingredients: { herbeSauvage: 2, cendreSpectrale: 1 }
+    },
+    bomb: {
+        name: 'Bombe',
+        result: 'bomb',
+        ingredients: { essenceOmbre: 1, pierreLune: 1 }
+    },
+    elixir: {
+        name: 'Élixir ultime',
+        result: 'elixir',
+        ingredients: { coeurGolem: 1, ecailleDragon: 1 }
+    }
+};
+
 function generateIngredientLoot(enemyLevel) {
     const drops = [];
     Object.entries(ingredientsData).forEach(([key, ing]) => {
@@ -96,6 +124,7 @@ const scenarios = [
         choices: [
             { text: 'Passer à la forge', action: 'forge', next: 0 },
             { text: 'Visiter le magasin', action: 'shop', next: 0 },
+            { text: "Utiliser l'atelier", action: 'craft', next: 0 },
             { text: 'Se reposer (10 or)', action: 'rest', next: 0 },
             { text: 'Continuer la route', action: 'road', next: 0 }
         ]
@@ -195,10 +224,13 @@ const scenarioButtons = document.getElementById('scenario-buttons');
 const inventoryContainer = document.getElementById('inventory-items');
 const shopModal = document.getElementById('shop-modal');
 const forgeModal = document.getElementById('forge-modal');
+const craftModal = document.getElementById('craft-modal');
 const shopGoldText = document.getElementById('shop-gold-text');
 const forgeGoldText = document.getElementById('forge-gold-text');
 const shopMessage = document.getElementById('shop-message');
 const forgeMessage = document.getElementById('forge-message');
+const craftButtons = document.getElementById('craft-buttons');
+const craftMessage = document.getElementById('craft-message');
 
 function playSound(type) {
     try {
@@ -455,6 +487,9 @@ function handleScenarioAction(action) {
     } else if (action === 'shop') {
         showShop();
         return;
+    } else if (action === 'craft') {
+        showCraft();
+        return;
     } else if (action === 'rest') {
         const price = 10;
         if (gameState.gold < price) {
@@ -523,6 +558,55 @@ function closeForge() {
     saveGame();
 }
 
+function showCraft() {
+    if (craftMessage) craftMessage.textContent = '';
+    renderCraftOptions();
+    craftModal.classList.remove('hidden');
+    updateHealthBars();
+}
+
+function closeCraft() {
+    craftModal.classList.add('hidden');
+    spawnNewEnemy();
+    updateHealthBars();
+    saveGame();
+}
+
+function renderCraftOptions() {
+    if (!craftButtons) return;
+    craftButtons.innerHTML = '';
+    Object.entries(craftRecipes).forEach(([key, r]) => {
+        const b = document.createElement('button');
+        b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
+        b.textContent = r.name;
+        b.onclick = () => craftItem(key);
+        craftButtons.appendChild(b);
+    });
+}
+
+function craftItem(key) {
+    const recipe = craftRecipes[key];
+    let can = true;
+    Object.entries(recipe.ingredients).forEach(([ing, qty]) => {
+        if ((gameState.inventory[ing] || 0) < qty) can = false;
+    });
+    let msg;
+    if (!can) {
+        msg = "Ingrédients insuffisants.";
+    } else {
+        Object.entries(recipe.ingredients).forEach(([ing, qty]) => {
+            gameState.inventory[ing] -= qty;
+        });
+        if (!gameState.inventory[recipe.result]) gameState.inventory[recipe.result] = 0;
+        gameState.inventory[recipe.result]++;
+        msg = `Vous créez ${recipe.name}!`;
+    }
+    if (craftMessage) craftMessage.textContent = msg;
+    addBattleMessage(msg, 'system');
+    renderInventory();
+    saveGame();
+}
+
 function buyForge(type) {
     const price = 50;
     if (gameState.gold < price) {
@@ -558,12 +642,13 @@ function renderInventory() {
         herb: { name: 'Herbe curative', icon: 'fa-leaf' },
         resPotion: { name: 'Potion de ressource', icon: 'fa-bolt' },
         megaPotion: { name: 'Méga potion', icon: 'fa-flask-vial' },
-        bomb: { name: 'Bombe', icon: 'fa-bomb' }
+        bomb: { name: 'Bombe', icon: 'fa-bomb' },
+        elixir: { name: 'Élixir ultime', icon: 'fa-star' }
     };
     Object.entries(ingredientsData).forEach(([k,v]) => {
         items[k] = { name: v.name, icon: v.icon };
     });
-    const usable = ['potion','firePotion','shield','herb','resPotion','megaPotion','bomb'];
+    const usable = ['potion','firePotion','shield','herb','resPotion','megaPotion','bomb','elixir'];
     if (!gameState.inventory) {
         gameState.inventory = {};
     }
@@ -609,6 +694,10 @@ function useItem(item) {
         const dmg = 35;
         gameState.enemy.health -= dmg;
         addBattleMessage(`La bombe explose et inflige ${dmg} dégâts!`, 'player');
+    } else if (item === 'elixir') {
+        gameState.player.health = gameState.player.maxHealth;
+        gameState.player.resource = gameState.player.maxResource;
+        addBattleMessage("L'élixir restaure entièrement vos forces!", 'heal');
     }
     gameState.inventory[item]--;
     renderInventory();
@@ -824,6 +913,8 @@ window.buyItem = buyItem;
 window.closeShop = closeShop;
 window.buyForge = buyForge;
 window.closeForge = closeForge;
+window.craftItem = craftItem;
+window.closeCraft = closeCraft;
 
 // Initialize game
 initialize();
