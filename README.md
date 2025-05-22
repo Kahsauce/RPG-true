@@ -38,6 +38,13 @@ classe. Chaque classe de base dispose désormais de plusieurs évolutions possib
 aux bonus variés (attaque, défense, critique, esquive, etc.). Les avantages sont
 affichés lors du choix et rappelés quand l'évolution est appliquée.
 
+### Récompenses et ressources
+
+Chaque ennemi vaincu rapporte désormais une petite somme d'or. Les gains de
+statistiques lors d'un passage de niveau sont indiqués dans le journal de
+combat. La génération d'énergie du voleur a également été augmentée pour rendre
+ses compétences plus faciles à utiliser.
+
 ## Licence
 
 Ce projet est distribué sous licence MIT. Voir le fichier `LICENSE` pour plus

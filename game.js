@@ -297,6 +297,13 @@ function showAdvancedOptions() {
 function selectAdvancedClass(key) {
     const adv = advancedClasses[gameState.player.class][key];
     gameState.player.advancedClass = adv.name;
+    const prev = {
+        atk: gameState.player.attack,
+        def: gameState.player.defense,
+        hp: gameState.player.maxHealth,
+        crit: gameState.player.critRate,
+        dodge: gameState.player.dodgeRate
+    };
     if (adv.attack) gameState.player.attack += adv.attack;
     if (adv.defense) gameState.player.defense += adv.defense;
     if (adv.maxHealth) {
@@ -306,13 +313,13 @@ function selectAdvancedClass(key) {
     if (adv.critRate) gameState.player.critRate += adv.critRate;
     if (adv.dodgeRate) gameState.player.dodgeRate += adv.dodgeRate;
     advancedModal.classList.add('hidden');
-    const bonuses = [];
-    if (adv.attack) bonuses.push(`+${adv.attack} ATK`);
-    if (adv.defense) bonuses.push(`+${adv.defense} DEF`);
-    if (adv.maxHealth) bonuses.push(`+${adv.maxHealth} PV`);
-    if (adv.critRate) bonuses.push(`+${Math.round(adv.critRate*100)}% Crit`);
-    if (adv.dodgeRate) bonuses.push(`+${Math.round(adv.dodgeRate*100)}% Esquive`);
-    addBattleMessage(`Évolution en ${adv.name} ! Avantages : ${bonuses.join(', ')}`, 'system');
+    const changes = [];
+    if (adv.attack) changes.push(`ATK ${prev.atk}→${gameState.player.attack}`);
+    if (adv.defense) changes.push(`DEF ${prev.def}→${gameState.player.defense}`);
+    if (adv.maxHealth) changes.push(`PV ${prev.hp}→${gameState.player.maxHealth}`);
+    if (adv.critRate) changes.push(`Crit ${Math.round(prev.crit*100)}%→${Math.round(gameState.player.critRate*100)}%`);
+    if (adv.dodgeRate) changes.push(`Esq ${Math.round(prev.dodge*100)}%→${Math.round(gameState.player.dodgeRate*100)}%`);
+    addBattleMessage(`Évolution en ${adv.name} ! ${changes.join(', ')}`, 'system');
     updateHealthBars();
     saveGame();
 }
@@ -657,18 +664,34 @@ function gameOver() {
 // Enemy defeated
 function enemyDefeated() {
     const xpGained = 15 + Math.floor(Math.random() * 10);
+    const prevStats = {
+        hp: gameState.player.maxHealth,
+        atk: gameState.player.attack,
+        def: gameState.player.defense
+    };
     const levels = gameState.player.gainXp(xpGained);
 
     addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
 
     if (levels > 0) {
-        addBattleMessage(`Niveau augmenté à ${gameState.player.level}! Statistiques améliorées.`, 'system');
+        const hpDiff = gameState.player.maxHealth - prevStats.hp;
+        const atkDiff = gameState.player.attack - prevStats.atk;
+        const defDiff = gameState.player.defense - prevStats.def;
+        const parts = [];
+        if (hpDiff) parts.push(`+${hpDiff} PV`);
+        if (atkDiff) parts.push(`+${atkDiff} ATK`);
+        if (defDiff) parts.push(`+${defDiff} DEF`);
+        addBattleMessage(`Niveau augmenté à ${gameState.player.level}! ${parts.join(', ')}`, 'system');
         if (!gameState.player.advancedClass && gameState.player.level >= 3) {
             showAdvancedOptions();
         } else {
             talentModal.classList.remove('hidden');
         }
     }
+
+    const goldEarned = 10 + Math.floor(Math.random() * 6);
+    gameState.gold += goldEarned;
+    addBattleMessage(`Vous récupérez ${goldEarned} or.`, 'system');
 
     updateHealthBars();
     saveGame();

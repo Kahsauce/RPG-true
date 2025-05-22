@@ -21,6 +21,8 @@ class Player {
         target.takeDamage(damage);
         if (this.resourceType === 'rage') {
             this.resource = Math.min(this.maxResource, this.resource + 10);
+        } else if (this.resourceType === 'energie') {
+            this.resource = Math.min(this.maxResource, this.resource + 5);
         }
         return damage;
     }
@@ -93,7 +95,7 @@ class Player {
             this.isDefending = false;
         }
         this.health -= dmg;
-        const regen = { mana: 5, energie: 3 };
+        const regen = { mana: 5, energie: 5 };
         if (this.resourceType === 'rage') {
             this.resource = Math.min(this.maxResource, this.resource + 5);
         } else if (regen[this.resourceType]) {
