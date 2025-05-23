@@ -1775,19 +1775,21 @@ function startDialogue(id, step = 0) {
 function showDialogueStep() {
     const d = dialogues[gameState.currentDialogue.id][gameState.currentDialogue.step];
     dialogueText.textContent = d.text;
-    if (d.quest) {
-        gameState.dialogueHistory.push({ quest: d.quest, text: d.text });
-    }
+    // L'historique du dialogue sera ajouté lors du clic sur la réponse
     dialogueButtons.innerHTML = '';
     d.choices.forEach(c => {
         const b = document.createElement('button');
         b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800';
         b.textContent = c.text;
         b.onclick = () => {
-            if (d.quest) startQuest(d.quest);
-            if (d.questStep !== undefined && d.quest) {
-                if (!gameState.questProgress) gameState.questProgress = {};
-                gameState.questProgress[d.quest] = d.questStep;
+            const questId = c.quest || d.quest;
+            if (questId) {
+                startQuest(questId);
+                gameState.dialogueHistory.push({ quest: questId, text: d.text });
+                if (d.questStep !== undefined) {
+                    if (!gameState.questProgress) gameState.questProgress = {};
+                    gameState.questProgress[questId] = d.questStep;
+                }
             }
             if (c.end) {
                 dialogueModal.classList.add('hidden');
