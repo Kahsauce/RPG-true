@@ -1490,6 +1490,21 @@ function playerDefend() {
     setTimeout(enemyTurn, 1500);
 }
 
+function playerFlee() {
+    if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
+    const result = gameState.player.tryFlee(gameState.enemy);
+    if (result) {
+        addBattleMessage('Vous prenez la fuite!', 'player');
+        spawnNewEnemy();
+    } else {
+        addBattleMessage("La fuite échoue!", 'system');
+        updateHealthBars();
+        gameState.isPlayerTurn = false;
+        setTimeout(enemyTurn, 500);
+    }
+}
+
 function getSpecialRestriction(player) {
     if (player.specialCooldown > 0) {
         return 'Compétence spéciale en récupération.';
@@ -1862,6 +1877,7 @@ window.playerAttack = playerAttack;
 window.playerAbility = playerAbility;
 window.playerDefend = playerDefend;
 window.playerSpecial = playerSpecial;
+window.playerFlee = playerFlee;
 window.selectClass = selectClass;
 window.selectJob = selectJob;
 window.chooseTalent = chooseTalent;

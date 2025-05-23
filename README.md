@@ -59,6 +59,11 @@ En choisissant plusieurs fois l'option « Continuer la route » dans les menus,
 un bonus d'attaque cumulatif apparaît. Il disparaît dès qu'une autre action est
 sélectionnée.
 
+Une nouvelle action **Fuir** permet maintenant de tenter d'échapper à un combat
+en cours. La réussite dépend d'une part de l'esquive du personnage et d'une
+part de hasard. En cas d'échec, l'ennemi porte immédiatement une attaque
+supplémentaire.
+
 ### Système de craft
 
 L'atelier affiche maintenant la liste des ingrédients nécessaires à la
