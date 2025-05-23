@@ -1,6 +1,6 @@
 /* --------- Données de base --------- */
 // Réduction de la difficulté globale de 5%
-const DIFFICULTY_MULTIPLIER = 1.14;
+const DIFFICULTY_MULTIPLIER = 0.95;
 
 function enemyPlaceholder(name) {
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='100%' height='100%' fill='#444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20'>${name}</text></svg>`;
@@ -57,22 +57,26 @@ const talents = {
     guerrier: {
         frappePuissante: { name: 'Frappe puissante', bonus: { attack: 3 }, description: '+3 ATK' },
         peauDeFer: { name: 'Peau de fer', bonus: { defense: 3 }, description: '+3 DEF' },
-        maitriseRage: { name: 'Maîtrise de la rage', bonus: { maxResource: 20 }, description: '+20 Rage' }
+        maitriseRage: { name: 'Maîtrise de la rage', bonus: { maxResource: 20 }, description: '+20 Rage' },
+        maitriseSpeciale: { name: 'Maîtrise spéciale', bonus: { specialCostReduction: 5 }, description: '-5 coût spécial' }
     },
     mage: {
         puissanceMagique: { name: 'Puissance magique', bonus: { attack: 2, critRate: 0.05 }, description: '+2 ATK, +5% Critique' },
         barriereArcanique: { name: 'Barrière arcanique', bonus: { defense: 1, maxHealth: 5 }, description: '+1 DEF, +5 PV' },
-        espritSage: { name: 'Esprit sage', bonus: { maxResource: 20 }, description: '+20 Mana' }
+        espritSage: { name: 'Esprit sage', bonus: { maxResource: 20 }, description: '+20 Mana' },
+        maitriseSpeciale: { name: 'Maîtrise spéciale', bonus: { specialCostReduction: 5 }, description: '-5 coût spécial' }
     },
     voleur: {
         lameRapide: { name: 'Lame rapide', bonus: { attack: 2, dodgeRate: 0.05 }, description: '+2 ATK, +5% Esquive' },
         ombreFurtive: { name: 'Ombre furtive', bonus: { dodgeRate: 0.1 }, description: '+10% Esquive' },
-        maitrePoison: { name: 'Maître du poison', bonus: { critRate: 0.05 }, description: '+5% Critique' }
+        maitrePoison: { name: 'Maître du poison', bonus: { critRate: 0.05 }, description: '+5% Critique' },
+        maitriseSpeciale: { name: 'Maîtrise spéciale', bonus: { specialCostReduction: 5 }, description: '-5 coût spécial' }
     },
     rodeur: {
         tirPrecis: { name: 'Tir précis', bonus: { attack: 2, critRate: 0.05 }, description: '+2 ATK, +5% Critique' },
         survieNature: { name: 'Survie en nature', bonus: { maxHealth: 5, defense: 1 }, description: '+5 PV, +1 DEF' },
-        chasseurEvasif: { name: 'Chasseur évasif', bonus: { dodgeRate: 0.05 }, description: '+5% Esquive' }
+        chasseurEvasif: { name: 'Chasseur évasif', bonus: { dodgeRate: 0.05 }, description: '+5% Esquive' },
+        maitriseSpeciale: { name: 'Maîtrise spéciale', bonus: { specialCostReduction: 5 }, description: '-5 coût spécial' }
     }
 };
 
@@ -112,6 +116,7 @@ Object.values(equipmentData).forEach(cls => {
 });
 
 const enemiesList = [
+    { name: 'Araignée venimeuse', level: 4, health: 32, maxHealth: 32, attackRange: [7,12], defense: 3, nextAttack: 'Morsure', img: enemyPlaceholder('Araignee'), statusEffectOnAttack: { name: 'poison', chance: 0.4, duration: 3, value: 2 } },
     { name: "Loup des Ombres", magicModifier: 1.5, physicalModifier: 1, level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: enemyPlaceholder('Loup'), preferredTime: 'night' },
     { name: "Golem de Pierre", physicalModifier: 0.8, magicModifier: 1.2, level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: enemyPlaceholder('Golem') },
     { name: "Esprit Perdu", magicModifier: 0.5, physicalModifier: 1.5, level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: enemyPlaceholder('Esprit'), preferredTime: 'night' },
@@ -314,6 +319,23 @@ const scenarios = [
         choices: [
             { text: "Remettre l'orbe", action: 'give-orb', next: 0 },
             { text: "Garder l'orbe", action: 'keep-orb', next: 0 }
+        ]
+    }
+];
+
+const randomEvents = [
+    {
+        text: 'Vous trouvez un coffre abandonné sur le bord de la route.',
+        choices: [
+            { text: "L'ouvrir", action: 'find-gold', next: 0 },
+            { text: 'Continuer son chemin', action: 'road-return', next: 0 }
+        ]
+    },
+    {
+        text: 'Un marchand itinérant vous aborde.',
+        choices: [
+            { text: 'Marchander', action: 'shop', next: 0 },
+            { text: 'Ignorer', action: 'road-return', next: 0 }
         ]
     }
 ];
@@ -636,6 +658,7 @@ const questDetailSteps = document.getElementById('quest-detail-steps');
 const questDetailNpc = document.getElementById('quest-detail-npc');
 const questDetailDialogues = document.getElementById('quest-detail-dialogues');
 const roadBonusDisplay = document.getElementById('road-bonus-display');
+const roadBonusMain = document.getElementById('road-bonus-main');
 const musicToggle = document.getElementById('music-toggle');
 const sfxToggle = document.getElementById('sfx-toggle');
 
@@ -767,12 +790,22 @@ function updateHealthBars() {
     }
     const icons = { mana: 'fa-droplet', energie: 'fa-bolt', rage: 'fa-fire' };
     resourceIcon.className = `fas ${icons[gameState.player.resourceType]} text-purple-400 mr-1`;
+    if (typeof updateRoadBonus === 'function') updateRoadBonus();
 }
 
 function updateTimeDisplay() {
     if (!timeDisplay) return;
     const label = gameState.timeOfDay < 0.5 ? 'Jour' : 'Nuit';
     timeDisplay.textContent = label;
+}
+
+function updateRoadBonus() {
+    if (roadBonusMain) {
+        roadBonusMain.textContent = gameState.roadStreak > 0 ? `+${gameState.roadStreak} ATK route` : '';
+    }
+    if (roadBonusDisplay) {
+        roadBonusDisplay.textContent = `Bonus d'attaque actuel : +${gameState.roadStreak} ATK`;
+    }
 }
 
 function advanceTime() {
@@ -966,6 +999,10 @@ function chooseTalent(key) {
     }
     if (talent.bonus.critRate) gameState.player.critRate += talent.bonus.critRate;
     if (talent.bonus.dodgeRate) gameState.player.dodgeRate += talent.bonus.dodgeRate;
+    if (talent.bonus.specialCostReduction) {
+        if (!gameState.player.specialCostReduction) gameState.player.specialCostReduction = 0;
+        gameState.player.specialCostReduction += talent.bonus.specialCostReduction;
+    }
     talentModal.classList.add('hidden');
     addBattleMessage(`Nouveau talent : ${talent.name} - ${talent.description}`, 'system');
     updateHealthBars();
@@ -973,7 +1010,10 @@ function chooseTalent(key) {
 }
 
 function showScenario(step) {
-    const sc = scenarios[step];
+    let sc = scenarios[step];
+    if (step === 0 && Math.random() < 0.3) {
+        sc = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+    }
     // If there is no scenario for this step, simply continue the game by
     // spawning a new enemy. This prevents the game from freezing when the
     // scenario chain ends.
@@ -982,9 +1022,7 @@ function showScenario(step) {
         return;
     }
     scenarioText.textContent = sc.text;
-    if (roadBonusDisplay) {
-        roadBonusDisplay.textContent = `Bonus d'attaque actuel : +${gameState.roadStreak} ATK`;
-    }
+    if (typeof updateRoadBonus === 'function') updateRoadBonus();
     scenarioButtons.innerHTML = '';
     sc.choices.forEach(c => {
         const btn = document.createElement('button');
@@ -1013,6 +1051,7 @@ function handleScenarioAction(action) {
         gameState.roadStreak = 0;
         if (gameState.player) gameState.player.roadBonus = 0;
     }
+    if (typeof updateRoadBonus === 'function') updateRoadBonus();
     if (action === 'forge') {
         if (!gameState.activeQuests.includes('forge') && !gameState.completedQuests.includes('forge')) {
             startQuest('forge');
@@ -1039,6 +1078,11 @@ function handleScenarioAction(action) {
             gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + heal);
             addBattleMessage(`Vous payez ${price} or pour vous reposer et récupérez ${heal} PV.`, 'system');
         }
+        spawnNewEnemy();
+    } else if (action === 'find-gold') {
+        const gain = 10 + Math.floor(Math.random() * 11);
+        gameState.gold += gain;
+        addBattleMessage(`Vous trouvez ${gain} pièces d'or dans le coffre.`, 'system');
         spawnNewEnemy();
     } else if (action === 'road') {
         if (gameState.activeQuests.includes('courrier')) {
@@ -1154,6 +1198,8 @@ function closeCraft() {
 function renderCraftOptions() {
     if (!craftButtons) return;
     craftButtons.innerHTML = '';
+    const itemIcons = { potion:'fa-flask', firePotion:'fa-fire', megaPotion:'fa-flask-vial', bomb:'fa-bomb', elixir:'fa-star' };
+    const slotIcons = { head: 'fa-helmet-safety', shoulders: 'fa-shirt', legs: 'fa-socks', gloves: 'fa-hand-back-fist' };
     Object.entries(craftRecipes).forEach(([key, r]) => {
         const b = document.createElement('button');
         b.className = 'px-3 py-2 bg-blue-700 rounded hover:bg-blue-800 text-left';
@@ -1170,7 +1216,13 @@ function renderCraftOptions() {
         } else if (craftResultInfo[r.result]) {
             bonusText = `<div class="text-xs text-blue-200">${craftResultInfo[r.result]}</div>`;
         }
-        b.innerHTML = `<div>${r.name}</div>${bonusText}<div class="text-xs">${list}</div>`;
+        let icon = '';
+        if (allEquipment[r.result]) {
+            icon = `<i class="fas ${slotIcons[allEquipment[r.result].slot]} mr-1"></i>`;
+        } else if (itemIcons[r.result]) {
+            icon = `<i class="fas ${itemIcons[r.result]} mr-1"></i>`;
+        }
+        b.innerHTML = `<div>${icon}${r.name}</div>${bonusText}<div class="text-xs">${list}</div>`;
         b.onclick = () => craftItem(key);
         craftButtons.appendChild(b);
     });
@@ -1185,6 +1237,10 @@ function craftItem(key) {
     let msg;
     if (!can) {
         msg = "Ingrédients insuffisants.";
+        if (craftMessage) {
+            craftMessage.classList.remove('text-green-400');
+            craftMessage.classList.add('text-red-400');
+        }
     } else {
         Object.entries(recipe.ingredients).forEach(([ing, qty]) => {
             gameState.inventory[ing] -= qty;
@@ -1192,6 +1248,10 @@ function craftItem(key) {
         if (!gameState.inventory[recipe.result]) gameState.inventory[recipe.result] = 0;
         gameState.inventory[recipe.result]++;
         msg = `Vous créez ${recipe.name}!`;
+        if (craftMessage) {
+            craftMessage.classList.remove('text-red-400');
+            craftMessage.classList.add('text-green-400');
+        }
     }
     if (craftMessage) craftMessage.textContent = msg;
     addBattleMessage(msg, 'system');
@@ -1211,17 +1271,22 @@ function buyForge(type) {
         return;
     }
     gameState.gold -= price;
+    let msg;
     if (type === 'weapon') {
         gameState.player.attack += 3;
-        const msg = 'Votre arme est améliorée (+3 attaque).';
-        if (forgeMessage) forgeMessage.textContent = msg;
-        addBattleMessage(msg, 'system');
-    } else {
+        msg = 'Votre arme est améliorée (+3 attaque).';
+    } else if (type === 'armor') {
         gameState.player.defense += 3;
-        const msg = 'Vous achetez une armure (+3 défense).';
-        if (forgeMessage) forgeMessage.textContent = msg;
-        addBattleMessage(msg, 'system');
+        msg = 'Vous achetez une armure (+3 défense).';
+    } else if (type === 'crit') {
+        gameState.player.critRate += 0.05;
+        msg = 'Des runes augmentent vos chances de critique (+5%).';
+    } else {
+        gameState.player.dodgeRate += 0.05;
+        msg = 'Votre équipement est équilibré (+5% esquive).';
     }
+    if (forgeMessage) forgeMessage.textContent = msg;
+    addBattleMessage(msg, 'system');
     if (gameState.activeQuests.includes('forge')) {
         completeQuest('forge');
     }
@@ -1515,7 +1580,8 @@ function getSpecialRestriction(player) {
         return 'Le berserker doit être blessé pour utiliser cette compétence.';
     }
     const baseCosts = { mana: 30, energie: 20, rage: 50 };
-    let cost = baseCosts[player.resourceType] + player.specialUses * 10;
+    let cost = baseCosts[player.resourceType] + player.specialUses * 5 - (player.specialCostReduction || 0);
+    if (cost < 0) cost = 0;
     if (player.class === 'guerrier') {
         if (player.resource <= 0) return 'Pas assez de rage.';
     } else {
@@ -1570,6 +1636,9 @@ function enemyTurn() {
     }, 300);
     
     addBattleMessage(`${gameState.enemy.name} utilise ${gameState.enemy.nextAttack} et inflige ${damage} points de dégâts!`, 'enemy');
+    if (gameState.enemy.appliedEffectLog) {
+        addBattleMessage(gameState.enemy.appliedEffectLog, 'system');
+    }
 
     if (gameState.player.health <= 0) {
         gameState.player.health = 0;
