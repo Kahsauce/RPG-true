@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
     </head>
 <body class="bg-custom text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
-    <div class="max-w-4xl w-full">
+    <div class="max-w-5xl mx-auto w-full">
         <!-- Header -->
         <header class="text-center mb-4">
             <h1 class="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">LUMINA</h1>
@@ -60,6 +60,9 @@
                         <div class="bg-gray-800/50 rounded-full h-2">
                             <div id="player-resource-bar" title="" class="health-bar bg-gradient-to-r from-purple-400 to-indigo-600 h-full rounded-full" style="width: 100%"></div>
                         </div>
+                        <div class="bg-gray-800/50 rounded-full h-2">
+                            <div id="combo-bar" title="0/5" class="health-bar bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="flex justify-around text-sm mb-4">
@@ -67,6 +70,7 @@
                     <span><i class="fas fa-shield-alt text-blue-300 mr-1"></i><span id="player-defense-text">0</span></span>
                     <span><i class="fas fa-crosshairs text-purple-300 mr-1"></i><span id="player-crit-text">0%</span></span>
                     <span><i class="fas fa-person-running text-green-300 mr-1"></i><span id="player-dodge-text">0%</span></span>
+                    <span><i class="fas fa-star text-yellow-300 mr-1"></i><span id="combo-points-text">0</span></span>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3">

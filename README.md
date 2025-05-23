@@ -63,6 +63,8 @@ Une nouvelle action **Fuir** permet maintenant de tenter d'échapper à un comba
 en cours. La réussite dépend d'une part de l'esquive du personnage et d'une
 part de hasard. En cas d'échec, l'ennemi porte immédiatement une attaque
 supplémentaire.
+Une barre de points de combo sous les jauges du joueur indique maintenant
+combien de coups ont été enchaînés avant de pouvoir utiliser un Finisher.
 
 ### Système de craft
 

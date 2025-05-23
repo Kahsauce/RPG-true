@@ -660,6 +660,8 @@ const playerAttackText = document.getElementById('player-attack-text');
 const playerDefenseText = document.getElementById('player-defense-text');
 const playerCritText = document.getElementById('player-crit-text');
 const playerDodgeText = document.getElementById('player-dodge-text');
+const comboPointsText = document.getElementById('combo-points-text');
+const comboBar = document.getElementById('combo-bar');
 const goldText = document.getElementById('gold-text');
 const introModal = document.getElementById('intro-modal');
 const classModal = document.getElementById('class-modal');
@@ -828,6 +830,14 @@ function updateHealthBars() {
     }
     if (playerDodgeText) {
         playerDodgeText.textContent = `${Math.round(gameState.player.dodgeRate * 100)}%`;
+    }
+    if (comboPointsText) {
+        comboPointsText.textContent = gameState.player.comboPoints;
+    }
+    if (comboBar) {
+        const comboPercent = Math.min(gameState.player.comboPoints, 5) / 5 * 100;
+        comboBar.style.width = `${comboPercent}%`;
+        comboBar.title = `${gameState.player.comboPoints}/5`;
     }
     if (goldText) {
         goldText.textContent = gameState.gold;
