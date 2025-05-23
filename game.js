@@ -734,6 +734,8 @@ function updateHealthBars() {
     xpText.textContent = `${gameState.player.xp}/${gameState.player.nextLevelXp} XP`;
     playerHpText.textContent = `${gameState.player.health}/${gameState.player.maxHealth}`;
     playerResourceText.textContent = `${gameState.player.resource}/${gameState.player.maxResource}`;
+    playerHealthBar.title = `${gameState.player.health}/${gameState.player.maxHealth}`;
+    playerResourceBar.title = `${gameState.player.resource}/${gameState.player.maxResource}`;
     enemyHpText.textContent = `${gameState.enemy.health}/${gameState.enemy.maxHealth}`;
     playerLevelText.textContent = `Niv. ${gameState.player.level}`;
     enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
