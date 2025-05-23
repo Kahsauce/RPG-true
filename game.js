@@ -602,6 +602,7 @@ const playerDefenseText = document.getElementById('player-defense-text');
 const playerCritText = document.getElementById('player-crit-text');
 const playerDodgeText = document.getElementById('player-dodge-text');
 const goldText = document.getElementById('gold-text');
+const introModal = document.getElementById('intro-modal');
 const classModal = document.getElementById('class-modal');
 const advancedModal = document.getElementById('advanced-class-modal');
 const advancedButtons = document.getElementById('advanced-buttons');
@@ -815,7 +816,8 @@ function addBattleMessage(message, type = 'system') {
 
 function initialize() {
     if (!gameState.player) {
-        classModal.classList.remove('hidden');
+        if (introModal) introModal.classList.remove('hidden');
+        else classModal.classList.remove('hidden');
     } else {
         updateHealthBars();
         renderInventory();
@@ -1850,6 +1852,11 @@ function closeQuestDetail() {
     questDetailModal.classList.add('hidden');
 }
 
+function startGame() {
+    if (introModal) introModal.classList.add('hidden');
+    if (classModal) classModal.classList.remove('hidden');
+}
+
 // Expose actions globally for HTML onclick handlers
 window.playerAttack = playerAttack;
 window.playerAbility = playerAbility;
@@ -1868,6 +1875,7 @@ window.equipItem = equipItem;
 window.startDialogue = startDialogue;
 window.showQuestDetail = showQuestDetail;
 window.closeQuestDetail = closeQuestDetail;
+window.startGame = startGame;
 
 // Initialize game
 initialize();
