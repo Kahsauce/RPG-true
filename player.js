@@ -19,6 +19,7 @@ class Player {
         this.magicResist = this.magicResist || 0;
         this.physicalResist = this.physicalResist || 0;
         this.specialCostReduction = this.specialCostReduction || 0;
+        this.xpMultiplier = this.xpMultiplier || 1;
     }
 
     startTurn() {
@@ -247,7 +248,8 @@ class Player {
         return dmg;
     }
 
-    gainXp(xp) {
+    gainXp(xp, multiplier = 1) {
+        xp = Math.floor(xp * multiplier * this.xpMultiplier);
         this.xp += xp;
         let levels = 0;
         while (this.xp >= this.nextLevelXp) {

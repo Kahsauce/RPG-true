@@ -2,6 +2,9 @@
 // Réduction de la difficulté globale de 5%
 const DIFFICULTY_MULTIPLIER = 0.95;
 const CURRENT_SAVE_VERSION = 1;
+const CRAFT_COOLDOWN_MS = 3000;
+const CARD_DROP_RATE = 0.02;
+const cardsList = ['Arcane','Braise','Foudre','Glace','Ombre','Lumière'];
 
 function enemyPlaceholder(name) {
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='100%' height='100%' fill='#444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20'>${name}</text></svg>`;
@@ -279,6 +282,21 @@ function generateIngredientLoot(enemyLevel) {
         }
     });
     return drops;
+}
+
+function handleCardDrop() {
+    if (Math.random() < CARD_DROP_RATE) {
+        const card = cardsList[Math.floor(Math.random() * cardsList.length)];
+        if (!gameState.cards) gameState.cards = {};
+        if (gameState.cards[card]) {
+            gameState.cardDust = (gameState.cardDust || 0) + 1;
+            addBattleMessage("Vous recevez de la poussière de carte.", 'system');
+        } else {
+            gameState.cards[card] = 1;
+            addBattleMessage(`Vous obtenez la carte “${card}”!`, 'system');
+        }
+        renderAlbum();
+    }
 }
 
 const scenarios = [
@@ -576,7 +594,12 @@ if (!gameState) {
         bestiary: {},
         timeOfDay: 0,
         dialogueHistory: [],
-        roadStreak: 0
+        roadStreak: 0,
+        prestigeLevel: 0,
+        astres: 0,
+        cards: {},
+        cardDust: 0,
+        nextCraftTime: 0
     };
 } else {
     // Garantir la présence de l'inventaire pour les anciennes sauvegardes
@@ -601,6 +624,11 @@ if (!gameState) {
     if (gameState.timeOfDay === undefined) gameState.timeOfDay = 0;
     if (!gameState.dialogueHistory) gameState.dialogueHistory = [];
     if (gameState.roadStreak === undefined) gameState.roadStreak = 0;
+    if (gameState.prestigeLevel === undefined) gameState.prestigeLevel = 0;
+    if (gameState.astres === undefined) gameState.astres = 0;
+    if (!gameState.cards) gameState.cards = {};
+    if (gameState.cardDust === undefined) gameState.cardDust = 0;
+    if (gameState.nextCraftTime === undefined) gameState.nextCraftTime = 0;
     if (!gameState.saveVersion) gameState.saveVersion = CURRENT_SAVE_VERSION;
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
@@ -667,6 +695,9 @@ const questDetailDesc = document.getElementById('quest-detail-desc');
 const questDetailSteps = document.getElementById('quest-detail-steps');
 const questDetailNpc = document.getElementById('quest-detail-npc');
 const questDetailDialogues = document.getElementById('quest-detail-dialogues');
+const cardGauge = document.getElementById('card-gauge');
+const cardCollection = document.getElementById('card-collection');
+const astresCount = document.getElementById('astres-count');
 const roadBonusDisplay = document.getElementById('road-bonus-display');
 const roadBonusMain = document.getElementById('road-bonus-main');
 const musicToggle = document.getElementById('music-toggle');
@@ -807,6 +838,9 @@ function updateHealthBars() {
     if (forgeGoldText) {
         forgeGoldText.textContent = gameState.gold;
     }
+    if (astresCount) {
+        astresCount.textContent = gameState.astres;
+    }
     if (playerIcon) {
         const classIcon = classes[gameState.player.class]?.icon || 'fa-user';
         playerIcon.className = `fas ${classIcon} text-5xl text-white`;
@@ -814,6 +848,7 @@ function updateHealthBars() {
     const icons = { mana: 'fa-droplet', energie: 'fa-bolt', rage: 'fa-fire' };
     resourceIcon.className = `fas ${icons[gameState.player.resourceType]} text-purple-400 mr-1`;
     if (typeof updateRoadBonus === 'function') updateRoadBonus();
+    if (typeof renderAlbum === 'function') renderAlbum();
 }
 
 function updateTimeDisplay() {
@@ -829,6 +864,10 @@ function updateRoadBonus() {
     if (roadBonusDisplay) {
         roadBonusDisplay.textContent = `Bonus d'attaque actuel : +${gameState.roadStreak} ATK`;
     }
+}
+
+function getXpMultiplier() {
+    return 1 + (gameState.prestigeLevel || 0) * 0.05;
 }
 
 function advanceTime() {
@@ -1252,6 +1291,16 @@ function renderCraftOptions() {
 }
 
 function craftItem(key) {
+    if (Date.now() < (gameState.nextCraftTime || 0)) {
+        const msg = "L'atelier doit refroidir.";
+        if (craftMessage) {
+            craftMessage.classList.remove('text-green-400');
+            craftMessage.classList.add('text-red-400');
+            craftMessage.textContent = msg;
+        }
+        addBattleMessage(msg, 'system');
+        return;
+    }
     const recipe = craftRecipes[key];
     let can = true;
     Object.entries(recipe.ingredients).forEach(([ing, qty]) => {
@@ -1280,6 +1329,7 @@ function craftItem(key) {
     addBattleMessage(msg, 'system');
     renderInventory();
     if (typeof renderCraftOptions === 'function') renderCraftOptions();
+    gameState.nextCraftTime = Date.now() + CRAFT_COOLDOWN_MS;
     saveGame();
 }
 
@@ -1488,6 +1538,22 @@ function renderBestiary() {
         li.textContent = `${name} (Niv. ${info.level}) ATK ${info.attackRange[0]}-${info.attackRange[1]} DEF ${info.defense}`;
         bestiaryList.appendChild(li);
     });
+}
+
+function renderAlbum() {
+    if (!cardGauge) return;
+    const owned = gameState.cards ? Object.keys(gameState.cards).length : 0;
+    const percent = Math.floor((owned / cardsList.length) * 100);
+    cardGauge.textContent = percent + '%';
+    if (cardCollection) {
+        cardCollection.innerHTML = '';
+        cardsList.forEach(c => {
+            const div = document.createElement('div');
+            div.textContent = c;
+            div.className = gameState.cards && gameState.cards[c] ? 'text-yellow-300' : 'text-gray-600';
+            cardCollection.appendChild(div);
+        });
+    }
 }
 
 function updateQuestPanel() {
@@ -1766,14 +1832,15 @@ function gameOver() {
 // Enemy defeated
 function enemyDefeated() {
     const xpGained = 15 + Math.floor(Math.random() * 10);
+    const xpFinal = Math.floor(xpGained * getXpMultiplier());
     const prevStats = {
         hp: gameState.player.maxHealth,
         atk: gameState.player.attack,
         def: gameState.player.defense
     };
-    const levels = gameState.player.gainXp(xpGained);
+    const levels = gameState.player.gainXp(xpGained, getXpMultiplier());
 
-    addBattleMessage(`Gagne ${xpGained} points d'expérience!`, 'system');
+    addBattleMessage(`Gagne ${xpFinal} points d'expérience!`, 'system');
 
     if (levels > 0) {
         const hpDiff = gameState.player.maxHealth - prevStats.hp;
@@ -1828,6 +1895,8 @@ function enemyDefeated() {
         defense: gameState.enemy.defense
     };
     checkQuestKill(gameState.enemy.name);
+
+    handleCardDrop();
 
     renderBestiary();
 
@@ -2057,6 +2126,20 @@ function closeQuestDetail() {
     questDetailModal.classList.add('hidden');
 }
 
+function prestigeReset() {
+    gameState.prestigeLevel++;
+    gameState.astres++;
+    if (gameState.player) {
+        gameState.player.level = 1;
+        gameState.player.xp = 0;
+        gameState.player.nextLevelXp = 100;
+        gameState.player.health = gameState.player.maxHealth;
+    }
+    addBattleMessage('Vous repartez plus expérimenté.', 'system');
+    updateHealthBars();
+    saveGame();
+}
+
 function startGame() {
     if (introModal) introModal.classList.add('hidden');
     if (classModal) classModal.classList.remove('hidden');
@@ -2082,6 +2165,7 @@ window.equipItem = equipItem;
 window.startDialogue = startDialogue;
 window.showQuestDetail = showQuestDetail;
 window.closeQuestDetail = closeQuestDetail;
+window.prestigeReset = prestigeReset;
 window.startGame = startGame;
 
 // Initialize game
