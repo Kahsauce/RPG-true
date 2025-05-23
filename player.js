@@ -15,6 +15,9 @@ class Player {
         this.tempCritBonus = this.tempCritBonus || 0;
         this.advancedEffect = this.advancedEffect || null;
         this.roadBonus = this.roadBonus || 0;
+        this.damageType = this.damageType || "physical";
+        this.magicResist = this.magicResist || 0;
+        this.physicalResist = this.physicalResist || 0;
     }
 
     startTurn() {
@@ -41,7 +44,7 @@ class Player {
             crit = true;
         }
         this.tempCritBonus = 0;
-        target.takeDamage(damage);
+        target.takeDamage(damage, this.damageType);
         this.comboPoints++;
         if (crit) this.comboPoints++;
         if (this.resourceType === 'energie') {
@@ -128,7 +131,7 @@ class Player {
             target.statusEffects.splice(poisonIndex, 1);
         }
 
-        target.takeDamage(damage);
+        target.takeDamage(damage, this.damageType);
 
         // Dynamic talents triggered by special
         if (this.talents && this.talents.includes('Folie du combat')) {
@@ -169,7 +172,7 @@ class Player {
         return logs;
     }
 
-    takeDamage(dmg) {
+    takeDamage(dmg, type="physical") {
         if (this.dodgeNext) {
             this.dodgeNext = false;
             this.comboPoints++;
@@ -198,6 +201,11 @@ class Player {
         if (this.isDefending) {
             dmg = Math.floor(dmg / 2);
             this.isDefending = false;
+        }
+        if (type === "magic") {
+            dmg = Math.floor(dmg * (1 - (this.magicResist || 0)));
+        } else {
+            dmg = Math.floor(dmg * (1 - (this.physicalResist || 0)));
         }
         this.health -= dmg;
         if (this.resourceType === 'rage') {

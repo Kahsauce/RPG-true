@@ -22,10 +22,10 @@ function formatBonus(bonus) {
     }).join(' ');
 }
 const classes = {
-    guerrier: { name: 'Guerrier', maxHealth: 60, attack: 10, defense: 8, icon: 'fa-shield-halved', resource: 'rage', maxResource: 100, critRate: 0.05, dodgeRate: 0.05 },
-    mage: { name: 'Mage', maxHealth: 40, attack: 14, defense: 4, icon: 'fa-hat-wizard', resource: 'mana', maxResource: 100, critRate: 0.1, dodgeRate: 0.05 },
-    voleur: { name: 'Voleur', maxHealth: 45, attack: 12, defense: 6, icon: 'fa-user-ninja', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.15 },
-    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-person-hiking', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate: 0.1 }
+    guerrier: { name: "Guerrier", maxHealth: 60, attack: 10, defense: 8, icon: "fa-shield-halved", resource: "rage", maxResource: 100, critRate: 0.05, dodgeRate: 0.05, damageType: "physical", magicResist: 0.1 },
+    mage: { name: "Mage", maxHealth: 40, attack: 14, defense: 4, icon: "fa-hat-wizard", resource: "mana", maxResource: 100, critRate: 0.1, dodgeRate: 0.05, damageType: "magic", magicResist: 0.3 },
+    voleur: { name: "Voleur", maxHealth: 45, attack: 12, defense: 6, icon: "fa-user-ninja", resource: "energie", maxResource: 100, critRate: 0.1, dodgeRate: 0.15, damageType: "physical", magicResist: 0.05 },
+    rodeur: { name: 'Rôdeur', maxHealth: 50, attack: 11, defense: 7, icon: 'fa-person-hiking', resource: 'energie', maxResource: 100, critRate: 0.1, dodgeRate:0.1, damageType: 'physical', magicResist: 0.1 }
 };
 
 const advancedClasses = {
@@ -112,14 +112,14 @@ Object.values(equipmentData).forEach(cls => {
 });
 
 const enemiesList = [
-    { name: "Loup des Ombres", level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: enemyPlaceholder('Loup'), preferredTime: 'night' },
-    { name: "Golem de Pierre", level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: enemyPlaceholder('Golem') },
-    { name: "Esprit Perdu", level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: enemyPlaceholder('Esprit'), preferredTime: 'night' },
-    { name: "Ombre Silencieuse", level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: enemyPlaceholder('Ombre'), preferredTime: 'night' },
-    { name: "Spectre Glacial", level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: enemyPlaceholder('Spectre'), preferredTime: 'night' },
-    { name: "Serpent des Sables", level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: enemyPlaceholder('Serpent'), preferredTime: 'day' },
-    { name: "Gardien antique", level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: enemyPlaceholder('Gardien'), location: locationPlaceholder('Ruines'), requiredQuest: "artefact", requiredStep: 1 },
-    { name: "Spectre du passé", level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: enemyPlaceholder('Spectre'), unlockQuest: "artefact", preferredTime: 'night' }
+    { name: "Loup des Ombres", magicModifier: 1.5, physicalModifier: 1, level: 4, health: 35, maxHealth: 35, attackRange: [8,12], defense: 3, nextAttack: "Morsure", img: enemyPlaceholder('Loup'), preferredTime: 'night' },
+    { name: "Golem de Pierre", physicalModifier: 0.8, magicModifier: 1.2, level: 5, health: 50, maxHealth: 50, attackRange: [10,15], defense: 5, nextAttack: "Coup de poing", img: enemyPlaceholder('Golem') },
+    { name: "Esprit Perdu", magicModifier: 0.5, physicalModifier: 1.5, level: 3, health: 25, maxHealth: 25, attackRange: [5,10], defense: 2, nextAttack: "Toucher spectral", img: enemyPlaceholder('Esprit'), preferredTime: 'night' },
+    { name: "Ombre Silencieuse", magicModifier: 0.5, physicalModifier: 1.5, level: 6, health: 40, maxHealth: 40, attackRange: [9,14], defense: 4, nextAttack: "Lame ténébreuse", img: enemyPlaceholder('Ombre'), preferredTime: 'night' },
+    { name: "Spectre Glacial", magicModifier: 0.5, physicalModifier: 1.5, level: 7, health: 45, maxHealth: 45, attackRange: [10,16], defense: 5, nextAttack: "Souffle glacé", img: enemyPlaceholder('Spectre'), preferredTime: 'night' },
+    { name: "Serpent des Sables", magicModifier: 1.3, physicalModifier: 1, level: 5, health: 30, maxHealth: 30, attackRange: [7,13], defense: 3, nextAttack: "Morsure rapide", img: enemyPlaceholder('Serpent'), preferredTime: 'day' },
+    { name: "Gardien antique", magicModifier: 0.8, physicalModifier: 0.9, level: 8, health: 60, maxHealth: 60, attackRange: [12,18], defense: 6, nextAttack: "Frappe lourde", img: enemyPlaceholder('Gardien'), location: locationPlaceholder('Ruines'), requiredQuest: "artefact", requiredStep: 1 },
+    { name: "Spectre du passé", magicModifier: 0.5, physicalModifier: 1.5, level: 9, health: 55, maxHealth: 55, attackRange: [13,19], defense: 5, nextAttack: "Hurlement spectral", img: enemyPlaceholder('Spectre'), unlockQuest: "artefact", preferredTime: 'night' }
 ];
 
 const locations = [
@@ -846,6 +846,9 @@ function selectClass(cl) {
         resourceType: info.resource,
         resource: info.resource === 'rage' ? 0 : info.maxResource,
         maxResource: info.maxResource,
+        damageType: info.damageType,
+        magicResist: info.magicResist,
+        physicalResist: 0,
         critRate: info.critRate,
         dodgeRate: info.dodgeRate,
         statusEffects: [],
