@@ -654,6 +654,7 @@ const shopGoldText = document.getElementById('shop-gold-text');
 const forgeGoldText = document.getElementById('forge-gold-text');
 const shopMessage = document.getElementById('shop-message');
 const forgeMessage = document.getElementById('forge-message');
+const forgeCanvas = document.getElementById('forge-canvas');
 const craftButtons = document.getElementById('craft-buttons');
 const craftMessage = document.getElementById('craft-message');
 const activeQuestList = document.getElementById('active-quests');
@@ -1282,6 +1283,8 @@ function craftItem(key) {
     saveGame();
 }
 
+let forgeGame = null;
+
 function buyForge(type) {
     const price = 50;
     if (gameState.gold < price) {
@@ -1293,10 +1296,62 @@ function buyForge(type) {
         return;
     }
     gameState.gold -= price;
+    startForgeGame(type);
+}
+
+function startForgeGame(type) {
+    if (!forgeCanvas) {
+        applyForgeResult(type, false);
+        return;
+    }
+    forgeCanvas.classList.remove('hidden');
+    const ctx = forgeCanvas.getContext('2d');
+    const w = forgeCanvas.width;
+    const h = forgeCanvas.height;
+    const barStart = 10;
+    const barWidth = w - 20;
+    const zoneStart = Math.floor(barWidth * 0.45);
+    const zoneEnd = Math.floor(barWidth * 0.55);
+    forgeGame = { type, pos: 0, dir: 2, zoneStart, zoneEnd, timer: null };
+
+    function draw() {
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#555';
+        ctx.fillRect(barStart, h / 2 - 5, barWidth, 10);
+        ctx.fillStyle = '#0a0';
+        ctx.fillRect(barStart + zoneStart, h / 2 - 5, zoneEnd - zoneStart, 10);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(barStart + forgeGame.pos - 2, h / 2 - 8, 4, 16);
+    }
+
+    function update() {
+        forgeGame.pos += forgeGame.dir;
+        if (forgeGame.pos > barWidth || forgeGame.pos < 0) {
+            forgeGame.dir *= -1;
+            forgeGame.pos += forgeGame.dir;
+        }
+        draw();
+    }
+
+    forgeGame.timer = setInterval(update, 16);
+
+    forgeCanvas.onclick = () => {
+        clearInterval(forgeGame.timer);
+        forgeCanvas.onclick = null;
+        forgeCanvas.classList.add('hidden');
+        const perfect = forgeGame.pos >= zoneStart && forgeGame.pos <= zoneEnd;
+        applyForgeResult(forgeGame.type, perfect);
+        forgeGame = null;
+    };
+}
+
+function applyForgeResult(type, perfect) {
     let msg;
     if (type === 'weapon') {
-        gameState.player.attack += 3;
-        msg = 'Votre arme est améliorée (+3 attaque).';
+        let bonus = 3;
+        if (perfect) bonus += 1;
+        gameState.player.attack += bonus;
+        msg = perfect ? 'Forge parfaite ! ATK +' + bonus : 'Votre arme est améliorée (+3 attaque).';
     } else if (type === 'armor') {
         gameState.player.defense += 3;
         msg = 'Vous achetez une armure (+3 défense).';
