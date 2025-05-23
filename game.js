@@ -1,6 +1,7 @@
 /* --------- Données de base --------- */
 // Réduction de la difficulté globale de 5%
 const DIFFICULTY_MULTIPLIER = 0.95;
+const CURRENT_SAVE_VERSION = 1;
 
 function enemyPlaceholder(name) {
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='100%' height='100%' fill='#444'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20'>${name}</text></svg>`;
@@ -520,13 +521,19 @@ const quests = {
 
 /* --------- Chargement/Sauvegarde --------- */
 function saveGame() {
+    const SAVE_VERSION = 1;
+    gameState.saveVersion = SAVE_VERSION;
     localStorage.setItem('luminaSave', JSON.stringify(gameState));
 }
 
 function loadGame() {
+    const SAVE_VERSION = 1;
     const data = localStorage.getItem('luminaSave');
     if (!data) return null;
     const obj = JSON.parse(data);
+    if (!obj.saveVersion || obj.saveVersion < SAVE_VERSION) {
+        obj.saveVersion = SAVE_VERSION;
+    }
     if (obj.player) obj.player = new Player(obj.player);
     if (obj.enemy) obj.enemy = new Enemy(obj.enemy);
     if (obj.player && !obj.player.statusEffects) obj.player.statusEffects = [];
@@ -543,6 +550,7 @@ function loadGame() {
 let gameState = loadGame();
 if (!gameState) {
     gameState = {
+        saveVersion: CURRENT_SAVE_VERSION,
         player: null,
         enemy: new Enemy({
             name: 'Loup des Ombres',
@@ -593,6 +601,7 @@ if (!gameState) {
     if (gameState.timeOfDay === undefined) gameState.timeOfDay = 0;
     if (!gameState.dialogueHistory) gameState.dialogueHistory = [];
     if (gameState.roadStreak === undefined) gameState.roadStreak = 0;
+    if (!gameState.saveVersion) gameState.saveVersion = CURRENT_SAVE_VERSION;
     if (gameState.player && !gameState.player.equipment) {
         gameState.player.equipment = { head: null, shoulders: null, legs: null, gloves: null };
     }
@@ -721,6 +730,14 @@ function stopAmbientMusic() {
     }
 }
 
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopAmbientMusic();
+    } else {
+        startAmbientMusic();
+    }
+});
+
 function playSound(type) {
     if (!sfxEnabled) return;
     try {
@@ -763,6 +780,11 @@ function updateHealthBars() {
     playerLevelText.textContent = `Niv. ${gameState.player.level}`;
     enemyLevelText.textContent = `Niv. ${gameState.enemy.level}`;
     enemyName.textContent = gameState.enemy.name;
+    if (gameState.enemy.elite) {
+        enemyName.classList.add('text-purple-400');
+    } else {
+        enemyName.classList.remove('text-purple-400');
+    }
     playerName.textContent = gameState.player.name;
     if (enemyImage && gameState.enemy.img) {
         enemyImage.src = gameState.enemy.img;
@@ -1622,6 +1644,31 @@ function playerSpecial() {
     setTimeout(enemyTurn, 1500);
 }
 
+function playerFinisher() {
+    if (!gameState.isPlayerTurn) return;
+    processStatusEffects();
+    const damage = gameState.player.finisher(gameState.enemy);
+    if (!damage) {
+        addBattleMessage('Pas assez de points de combo.', 'system');
+        return;
+    }
+
+    enemyCharacter.classList.add('damage-animation');
+    setTimeout(() => {
+        enemyCharacter.classList.remove('damage-animation');
+    }, 300);
+
+    addBattleMessage(`Finisher inflige ${damage} dégâts!`, 'player');
+    if (gameState.enemy.health <= 0) {
+        gameState.enemy.health = 0;
+        addBattleMessage(`${gameState.enemy.name} a été vaincu!`, 'system');
+        setTimeout(enemyDefeated, 1000);
+    }
+    updateHealthBars();
+    gameState.isPlayerTurn = false;
+    setTimeout(enemyTurn, 1500);
+}
+
 // Enemy turn
 function enemyTurn() {
     if (gameState.enemy.health <= 0) return;
@@ -1699,6 +1746,16 @@ function enemyDefeated() {
         gameState.inventory[key]++;
         addBattleMessage(`Vous obtenez ${ingredientsData[key].name}.`, 'system');
     });
+    if (gameState.enemy.elite) {
+        const rare = Object.keys(ingredientsData).filter(k => ['rare','epique'].includes(ingredientsData[k].rarity));
+        const count = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+            const key = rare[Math.floor(Math.random() * rare.length)];
+            if (!gameState.inventory[key]) gameState.inventory[key] = 0;
+            gameState.inventory[key]++;
+            addBattleMessage(`Butin élite: ${ingredientsData[key].name}.`, 'system');
+        }
+    }
     checkQuestLoot(ingredientsLooted);
     if (gameState.activeQuests.includes('artefact') && gameState.questProgress && gameState.questProgress['artefact'] === 1 && gameState.enemy.name === 'Gardien antique') {
         if (!gameState.inventory.orbeAncien) gameState.inventory.orbeAncien = 0;
@@ -1762,6 +1819,13 @@ function spawnNewEnemy() {
     base.defense += Math.floor(gameState.player.level / 2);
     if (gameState.timeOfDay >= 0.5 && base.preferredTime === 'night') {
         base.attackRange = base.attackRange.map(v => Math.floor(v * 1.1));
+    }
+    if (Math.random() < 0.05) {
+        base.name = `Élite ${base.name}`;
+        base.maxHealth = Math.floor(base.maxHealth * 1.3);
+        base.health = base.maxHealth;
+        base.attackRange = base.attackRange.map(v => Math.floor(v * 1.3));
+        base.elite = true;
     }
     base.statusEffects = [];
     gameState.enemy = new Enemy(base);
@@ -1948,6 +2012,7 @@ window.playerAttack = playerAttack;
 window.playerAbility = playerAbility;
 window.playerDefend = playerDefend;
 window.playerSpecial = playerSpecial;
+window.playerFinisher = playerFinisher;
 window.playerFlee = playerFlee;
 window.selectClass = selectClass;
 window.selectJob = selectJob;

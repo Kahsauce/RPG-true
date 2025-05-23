@@ -160,6 +160,24 @@ class Player {
         return damage;
     }
 
+    finisher(target) {
+        if (this.comboPoints < 5) return null;
+        this.startTurn();
+        this.comboPoints -= 5;
+        let damage = this.attack * 2;
+        if (this.class === 'mage') {
+            damage = Math.floor(this.attack * 2.2);
+        } else if (this.class === 'voleur') {
+            damage = Math.floor(this.attack * 1.8) + 5;
+        } else if (this.class === 'rodeur') {
+            damage = Math.floor(this.attack * 1.9);
+        } else {
+            damage = Math.floor(this.attack * 2);
+        }
+        target.takeDamage(damage, this.damageType);
+        return damage;
+    }
+
     tryFlee(enemy) {
         this.startTurn();
         const chance = 0.3 + (this.dodgeRate || 0);
