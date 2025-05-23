@@ -18,6 +18,7 @@ class Player {
         this.damageType = this.damageType || "physical";
         this.magicResist = this.magicResist || 0;
         this.physicalResist = this.physicalResist || 0;
+        this.specialCostReduction = this.specialCostReduction || 0;
     }
 
     startTurn() {
@@ -94,7 +95,8 @@ class Player {
             return null;
         }
         const costs = { mana: 30, energie: 20, rage: 50 };
-        let cost = costs[this.resourceType] + this.specialUses * 10;
+        let cost = costs[this.resourceType] + this.specialUses * 5 - this.specialCostReduction;
+        if (cost < 0) cost = 0;
         let damage = 0;
         if (this.class === 'guerrier') {
             if (this.resource <= 0) return null;

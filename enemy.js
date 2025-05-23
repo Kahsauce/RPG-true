@@ -29,6 +29,16 @@ class Enemy {
             this.attackRange[0] + Math.floor(Math.random() * (this.attackRange[1] - this.attackRange[0] + 1)) - player.defense
         );
         player.takeDamage(damage, this.damageType);
+        if (this.statusEffectOnAttack && Math.random() < (this.statusEffectOnAttack.chance || 1)) {
+            player.statusEffects.push({
+                name: this.statusEffectOnAttack.name,
+                duration: this.statusEffectOnAttack.duration,
+                value: this.statusEffectOnAttack.value
+            });
+            this.appliedEffectLog = `${player.name} est affecté par ${this.statusEffectOnAttack.name}!`;
+        } else {
+            this.appliedEffectLog = null;
+        }
         return damage;
     }
 
