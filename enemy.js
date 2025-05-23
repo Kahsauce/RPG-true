@@ -1,10 +1,23 @@
 class Enemy {
     constructor(data) {
+        
         Object.assign(this, data);
+        this.damageType = this.damageType || "physical";
+        this.magicModifier = this.magicModifier === undefined ? 1 : this.magicModifier;
+        this.physicalModifier = this.physicalModifier === undefined ? 1 : this.physicalModifier;
+        this.magicResist = this.magicResist || 0;
+        this.physicalResist = this.physicalResist || 0;
         this.statusEffects = this.statusEffects || [];
     }
 
-    takeDamage(dmg) {
+    takeDamage(dmg, type="physical") {
+        if (type === "magic") {
+            dmg = Math.floor(dmg * (this.magicModifier || 1));
+            dmg = Math.floor(dmg * (1 - (this.magicResist || 0)));
+        } else {
+            dmg = Math.floor(dmg * (this.physicalModifier || 1));
+            dmg = Math.floor(dmg * (1 - (this.physicalResist || 0)));
+        }
         this.health -= dmg;
         if (this.health < 0) this.health = 0;
         return dmg;
@@ -15,7 +28,7 @@ class Enemy {
             1,
             this.attackRange[0] + Math.floor(Math.random() * (this.attackRange[1] - this.attackRange[0] + 1)) - player.defense
         );
-        player.takeDamage(damage);
+        player.takeDamage(damage, this.damageType);
         return damage;
     }
 
