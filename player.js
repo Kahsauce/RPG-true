@@ -158,6 +158,16 @@ class Player {
         return damage;
     }
 
+    tryFlee(enemy) {
+        this.startTurn();
+        const chance = 0.3 + (this.dodgeRate || 0);
+        if (Math.random() < chance) {
+            return true;
+        }
+        enemy.attack(this);
+        return false;
+    }
+
     applyStatusEffects() {
         const logs = [];
         this.statusEffects = this.statusEffects.filter(e => {
