@@ -255,6 +255,14 @@ const craftRecipes = {
     }
 };
 
+const craftResultInfo = {
+    potion: 'Restaure 20 PV',
+    firePotion: 'Inflige 20 dégâts + brûlure',
+    megaPotion: 'Restaure 50 PV',
+    bomb: 'Inflige 35 dégâts',
+    elixir: 'Restaure complètement PV et ressource'
+};
+
 function generateIngredientLoot(enemyLevel) {
     const drops = [];
     Object.entries(ingredientsData).forEach(([key, ing]) => {
@@ -1149,7 +1157,13 @@ function renderCraftOptions() {
                 return `<span class="${color}">${ingredientsData[ing].name} ${have}/${qty}</span>`;
             })
             .join(', ');
-        b.innerHTML = `<div>${r.name}</div><div class="text-xs">${list}</div>`;
+        let bonusText = '';
+        if (allEquipment[r.result]) {
+            bonusText = `<div class="text-xs text-blue-200">${formatBonus(allEquipment[r.result].bonus)}</div>`;
+        } else if (craftResultInfo[r.result]) {
+            bonusText = `<div class="text-xs text-blue-200">${craftResultInfo[r.result]}</div>`;
+        }
+        b.innerHTML = `<div>${r.name}</div>${bonusText}<div class="text-xs">${list}</div>`;
         b.onclick = () => craftItem(key);
         craftButtons.appendChild(b);
     });
@@ -1175,6 +1189,7 @@ function craftItem(key) {
     if (craftMessage) craftMessage.textContent = msg;
     addBattleMessage(msg, 'system');
     renderInventory();
+    if (typeof renderCraftOptions === 'function') renderCraftOptions();
     saveGame();
 }
 
@@ -1369,6 +1384,7 @@ function useItem(item) {
     }
     gameState.inventory[item]--;
     renderInventory();
+    if (typeof renderCraftOptions === 'function') renderCraftOptions();
     updateHealthBars();
     saveGame();
 }
